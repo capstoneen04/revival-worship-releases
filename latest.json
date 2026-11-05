@@ -1,29 +1,29 @@
 {
- "version": "2.0.0",
- "date": "2026-11-05T19:03:34.586Z",
+ "version": "2.1.0",
+ "date": "2026-11-05T20:04:40.240Z",
  "minShell": 2,
- "notes": "Revival Worship 2.0.0\n- Updates by themselves from GitHub (Settings → Updates): downloads in the background, installs when you restart, never during a stream; 'Go back to the previous version' if needed.\n- Windows version (installer) alongside the Mac version.\n- Song library and Hindi Bible are locked with the church library password in public downloads; members' details are never included.\n- Date tag shows only the date (black with white text).\n- Sermon Split: no sermon title, bigger verse box.",
+ "notes": "Revival Worship 2.1: import songs (VerseVIEW, OpenLyrics, OpenSong, ChordPro, FreeShow, text); chords and transpose; coloured verse/chorus; headings, pictures/videos and print in the service; sermon timer; audience message; recent songs; side-by-side languages; stage layouts for musicians and preacher; camera on the projector; moving backgrounds; more Bible versions; Stream Deck buttons; phone songbook.",
  "update": {
-  "name": "update-2.0.0.zip",
-  "size": 207524,
-  "sha256": "7405918fe30374dcae07d1feb133ac6a6b938f247139f2ef1ca28808424c850f"
+  "name": "update-2.1.0.zip",
+  "size": 3079744,
+  "sha256": "7e53c5cd1c344c21c58c9c97de02fc452084bcc6f41f7f4873af75fd6f49e74e"
  },
  "library": {
   "name": "church-library-26.11.5.rwpack",
-  "size": 3838420,
-  "sha256": "aec5cd5fc3d24758a1e330fca9a5041f712b1982c27204e6fc3f6d55f90a32e1",
+  "size": 3838421,
+  "sha256": "fcd60ad953448bad2c47f4e2659f53e7e7476d81e2d494d3af02980e878ced94",
   "version": "26.11.5"
  },
  "installers": {
   "mac": {
-   "name": "Revival-Worship-2.0.0-mac-arm64.zip",
-   "size": 209676353,
-   "sha256": "9cef9a1a9abfe5ead4361f72a045c73957952aae686fb6127121e4cf14111c97"
+   "name": "Revival-Worship-2.1.0-mac-arm64.zip",
+   "size": 212396088,
+   "sha256": "e8f5f5d719bc1ba486558955e0ec7499006c43d128a02bfe8da61ce603ac33da"
   },
   "win": {
-   "name": "Revival-Worship-Setup-2.0.0-win-x64.exe",
-   "size": 187248798,
-   "sha256": "45d8e15da1f22410a934bc054981320e6bc3bc24cd58fc30df02bc538111ae6c"
+   "name": "Revival-Worship-Setup-2.1.0-win-x64.exe",
+   "size": 190223030,
+   "sha256": "5272f6320f59891746bb79e6c5f1ae739905fbadc7d6dc4c42d7fe288a91a016"
   }
  }
 }

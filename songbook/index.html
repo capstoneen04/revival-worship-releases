@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1730">
+<title>Revival Songbook</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{--bg:#f7f5f0;--card:#fff;--ink:#1b1f27;--muted:#6b7280;--line:#e6e2d8;--accent:#1f5fc9;--chord:#c2410c;--zoom:1}
+  @media (prefers-color-scheme: dark){:root:not([data-theme=light]){--bg:#0f1115;--card:#171a21;--ink:#e8ebf1;--muted:#8d96a6;--line:#262b36;--accent:#7aa8ff;--chord:#fb923c}}
+  :root[data-theme=dark]{--bg:#0f1115;--card:#171a21;--ink:#e8ebf1;--muted:#8d96a6;--line:#262b36;--accent:#7aa8ff;--chord:#fb923c}
+  *{box-sizing:border-box} html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans Devanagari","Segoe UI",sans-serif}
+  header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(12px + env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:10px} .brand img{width:34px;height:34px;border-radius:8px}
+  .brand b{font-size:17px} .brand span{color:var(--muted);font-size:13px} .brand .sp{flex:1}
+  .ib{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;height:34px;min-width:38px;padding:0 10px;font:inherit;font-size:14px}
+  input{width:100%;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:0 14px;font:inherit;font-size:16px;outline:none}
+  input:focus{border-color:var(--accent)}
+  .chips{display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:2px;scrollbar-width:none}
+  .chips button,.tabs button{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:6px 12px;font:inherit;font-size:13px}
+  .chips button.on,.tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  main{max-width:780px;margin:0 auto;padding:8px 16px 60px}
+  .song{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:inherit;padding:12px 2px;font:inherit;cursor:pointer}
+  .song .t{font-weight:600;font-size:16px} .song .s{color:var(--muted);font-size:13.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .song .n{float:right;color:var(--muted);font-size:12px;margin-left:8px}
+  #view{display:none} body.reading #list{display:none} body.reading #view{display:block} body.reading header .chips, body.reading header input{display:none}
+  .back{border:0;background:none;color:var(--accent);font:inherit;font-size:15px;padding:6px 0;cursor:pointer}
+  h1{font-size:24px;margin:8px 0 4px} .meta{color:var(--muted);font-size:13px;margin-bottom:12px}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 16px}
+  .sec{margin-bottom:20px;font-size:calc(18px * var(--zoom));line-height:1.6}
+  .lab{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--sc,var(--accent))}
+  .cl{display:flex;flex-wrap:wrap;line-height:1.25;margin:2px 0} .cs{display:inline-flex;flex-direction:column;white-space:pre}
+  .cs b{color:var(--chord);font-size:.8em;min-height:1.2em}
+  .tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0}
+  #gate{max-width:420px;margin:12vh auto 0;padding:0 20px;text-align:center}
+  #gate img{width:72px;height:72px;border-radius:16px} #gate h2{margin:14px 0 6px} #gate p{color:var(--muted);font-size:14px;line-height:1.5}
+  #gate input{margin:14px 0 10px;text-align:center} .go{width:100%;height:46px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-size:16px;font-weight:600}
+  .err{color:#e5484d;min-height:20px;font-size:14px;margin-top:8px}
+  .note{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="gate" hidden>
+  <img src="icon-192.png" alt="">
+  <h2>Revival Songbook</h2>
+  <p>Revival Church Mumbai. The songs are locked with the church library password — ask the media team.</p>
+  <form id="gf"><input id="pw" type="password" placeholder="Church library password" autocomplete="current-password"><button class="go" id="gb">Open the songbook</button></form>
+  <div class="err" id="ge"></div>
+</div>
+<div id="app" hidden>
+<header>
+  <div class="brand"><img src="icon-192.png" alt=""><div><b>Revival Songbook</b><br><span id="count"></span></div><div class="sp"></div><button class="ib" id="theme" title="Light / dark">◐</button></div>
+  <input id="q" type="search" placeholder="Search number, title or words — हिंदी, Hinglish, English" autocomplete="off">
+  <div class="chips" id="chips"></div>
+</header>
+<main>
+  <div id="list"></div>
+  <div id="view"></div>
+  <div class="note" id="note"></div>
+</main>
+</div>
+<script src="scrypt.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
