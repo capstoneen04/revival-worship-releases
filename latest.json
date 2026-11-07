@@ -1,17 +1,17 @@
 {
- "version": "2.4.0",
- "date": "2026-11-07T16:35:07.522Z",
+ "version": "2.4.1",
+ "date": "2026-11-07T17:20:27.484Z",
  "minShell": 2,
- "notes": "2.4: song leaders' set lists \u2014 plan on the phone (\u2630 Lists), send to the media desk, added to that day's service from Songs \u2192 Inbox.",
+ "notes": "2.4.1: Inbox has one Review button that opens the song in the editor; repeated sends are grouped and cleared together; corrections keep their song number.",
  "update": {
-  "name": "update-2.4.0.zip",
-  "size": 3096428,
-  "sha256": "c5ab381c5b610f1970d6627d7aa10e1657fb582d9510302a40cbc5986e1defbc"
+  "name": "update-2.4.1.zip",
+  "size": 3097434,
+  "sha256": "1a4a451aea79b8e0bc1dfde07ff63a2e6541b997e7eadc56730fe41a24a9a0cc"
  },
  "library": {
   "name": "church-library-26.1107.2134.rwpack",
   "size": 3844586,
-  "sha256": "17286cef393c2a73d030cb455465280e8119d4bdd689809c04a82251495364db",
+  "sha256": "2e955f9ea8e1d3d5a482598864d346e05d7ee3e22502937f98ce4a4921870eac",
   "version": "26.1107.2134"
  },
  "installers": {}

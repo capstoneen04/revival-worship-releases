@@ -92,8 +92,14 @@ export function init(app) {
     let changed = false;
     for (const q of queue.filter(q => q.state === "queued")) {
       try {
-        await gh("PUT", `/repos/${INBOX()}/contents/inbox/${q.id}.json`, { message: `${{ new: "New song", edit: "Correction", setlist: "Set list" }[q.kind]}: ${q.song.title} (${q.by})`, content: b64(JSON.stringify({ v: 1, kind: q.kind, song: q.song, setlist: q.setlist, by: q.by, at: q.at, note: q.note }, null, 1)) });
-        q.state = "sent"; changed = true;
+        let sha;
+        if (q.update) {                           // replace the waiting file; if the desk already took it, the decision is checked below
+          const cur = await fetch(`${API()}/repos/${INBOX()}/contents/inbox/${q.id}.json`, { headers: { authorization: "Bearer " + await kv.get("team-key"), accept: "application/vnd.github+json" }, cache: "no-store" });
+          if (cur.ok) sha = (await cur.json()).sha;
+          else { const dec = await fetch(`${API()}/repos/${INBOX()}/contents/decisions/${q.id}.json`, { headers: { authorization: "Bearer " + await kv.get("team-key") }, cache: "no-store" }); if (dec.ok) { q.id = sid(); q.kind = "edit"; } }
+        }
+        await gh("PUT", `/repos/${INBOX()}/contents/inbox/${q.id}.json`, { ...(sha ? { sha } : {}), message: `${{ new: "New song", edit: "Correction", setlist: "Set list" }[q.kind]}: ${q.song.title} (${q.by})`, content: b64(JSON.stringify({ v: 1, kind: q.kind, song: q.song, setlist: q.setlist, by: q.by, at: q.at, note: q.note }, null, 1)) });
+        q.state = "sent"; delete q.update; changed = true;
       } catch (e) { console.warn(e); break; }
     }
     if (changed) save();
@@ -146,7 +152,10 @@ export function init(app) {
       out.key = q("#t-keyx").value.trim();
       const bk = q("#t-book").value.trim().match(/^([A-Za-z]+)\s*(\d+)$/); if (bk) out.books = [{ book: bk[1].toUpperCase(), num: +bk[2] }];
       out.updated = now;
-      queue.push({ id: sid(), kind: song ? "edit" : "new", song: out, by, at: now, note: q("#t-note").value.trim(), state: "queued" });
+      // correcting a song that is still waiting at the media desk → update that same submission (no pile of copies in the inbox)
+      const waiting = song && queue.find(x => x.song.id === song.id && (x.state === "queued" || x.state === "sent"));
+      if (waiting) { waiting.song = out; waiting.at = now; waiting.note = [waiting.note, q("#t-note").value.trim()].filter(Boolean).join(" · "); if (waiting.state === "sent") waiting.update = true; waiting.state = "queued"; queue.push(queue.splice(queue.indexOf(waiting), 1)[0]); }
+      else queue.push({ id: sid(), kind: song ? "edit" : "new", song: out, by, at: now, note: q("#t-note").value.trim(), state: "queued" });
       await save(); box.remove(); await flush();
       const sent = queue.at(-1).state === "sent";
       toastMsg(sent ? "Sent to the media team ✓" : "Saved on this phone — it will be sent when you are online");
@@ -197,7 +206,10 @@ export function init(app) {
     async sendList(l) {
       if (!(await kv.get("team-key")) || !pref("name", "")) { setup(() => api.sendList(l)); return false; }
       const now = new Date().toISOString();
-      queue.push({ id: sid(), kind: "setlist", song: { id: "", title: `${l.title} (${l.date})` }, setlist: { title: l.title, date: l.date, items: l.items.map(x => ({ songId: x.songId, key: x.key || "", note: x.note || "" })) }, by: pref("name", ""), at: now, note: "", state: "queued" });
+      const setlist = { id: l.id, title: l.title, date: l.date, items: l.items.map(x => ({ songId: x.songId, key: x.key || "", note: x.note || "" })) };
+      const waiting = queue.find(x => x.kind === "setlist" && x.setlist?.id === l.id && (x.state === "queued" || x.state === "sent"));
+      if (waiting) { Object.assign(waiting, { song: { id: "", title: `${l.title} (${l.date})` }, setlist, at: now, update: waiting.state === "sent" || waiting.update, state: "queued" }); }   // same list sent again → replace it at the desk
+      else queue.push({ id: sid(), kind: "setlist", song: { id: "", title: `${l.title} (${l.date})` }, setlist, by: pref("name", ""), at: now, note: "", state: "queued" });
       await save(); await flush();
       toastMsg(queue.at(-1).state === "sent" ? "Sent to the media desk ✓" : "Saved — it will be sent when you are online");
       return true;
