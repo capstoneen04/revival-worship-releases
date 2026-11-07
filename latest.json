@@ -1,29 +1,29 @@
 {
- "version": "2.1.0",
- "date": "2026-11-05T20:04:40.240Z",
+ "version": "2.2.0",
+ "date": "2026-11-07T10:19:32.179Z",
  "minShell": 2,
- "notes": "Revival Worship 2.1: import songs (VerseVIEW, OpenLyrics, OpenSong, ChordPro, FreeShow, text); chords and transpose; coloured verse/chorus; headings, pictures/videos and print in the service; sermon timer; audience message; recent songs; side-by-side languages; stage layouts for musicians and preacher; camera on the projector; moving backgrounds; more Bible versions; Stream Deck buttons; phone songbook.",
+ "notes": "Revival Worship 2.2: team songbook on phones (add songs, photo → text, corrections), Songs → Inbox to approve them, Settings → Team songbook → Publish library so every computer and phone gets the new songs.",
  "update": {
-  "name": "update-2.1.0.zip",
-  "size": 3079744,
-  "sha256": "7e53c5cd1c344c21c58c9c97de02fc452084bcc6f41f7f4873af75fd6f49e74e"
+  "name": "update-2.2.0.zip",
+  "size": 3088419,
+  "sha256": "60209a53e5eacc9ee272d8ea4e8c0cdaceffa0e6d028c560598dfd7c8e70eff8"
  },
  "library": {
   "name": "church-library-26.11.5.rwpack",
-  "size": 3838421,
-  "sha256": "fcd60ad953448bad2c47f4e2659f53e7e7476d81e2d494d3af02980e878ced94",
+  "size": 3838417,
+  "sha256": "258fe21f290a871fc0be67f13bfe89af87218927577c493d69bf9532c6d7a4fe",
   "version": "26.11.5"
  },
  "installers": {
   "mac": {
-   "name": "Revival-Worship-2.1.0-mac-arm64.zip",
-   "size": 212396088,
-   "sha256": "e8f5f5d719bc1ba486558955e0ec7499006c43d128a02bfe8da61ce603ac33da"
+   "name": "Revival-Worship-2.2.0-mac-arm64.zip",
+   "size": 212405072,
+   "sha256": "f035a41df160954c2527c7642afd634ea91637e450e0ea3d7807cc8fc04c5629"
   },
   "win": {
-   "name": "Revival-Worship-Setup-2.1.0-win-x64.exe",
-   "size": 190223030,
-   "sha256": "5272f6320f59891746bb79e6c5f1ae739905fbadc7d6dc4c42d7fe288a91a016"
+   "name": "Revival-Worship-Setup-2.2.0-win-x64.exe",
+   "size": 190178359,
+   "sha256": "1892bbad6aeb5ed0818878e8b820d6c9f3fea56fb6aa43fd4f7bd4c1cbec39d2"
   }
  }
 }

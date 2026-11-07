@@ -54,7 +54,7 @@ async function decrypt(buf, keyBytes) {
 }
 
 // ---------- app ----------
-let songs = [], idx, lang = pref("lang", ""), zoom = +pref("zoom", 1), chordsOn = pref("chords", "0") === "1", semis = 0;
+let songs = [], pending = [], idx, cur = null, hooks = null, lang = pref("lang", ""), zoom = +pref("zoom", 1), chordsOn = pref("chords", "0") === "1", semis = 0;
 document.documentElement.style.setProperty("--zoom", zoom);
 const th = pref("theme", ""); if (th) document.documentElement.dataset.theme = th;
 $("theme").onclick = () => { const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); const n = cur === "dark" ? "light" : "dark"; document.documentElement.dataset.theme = n; setPref("theme", n); };
@@ -88,7 +88,8 @@ async function refresh(have) {                       // new songs from the media
 
 function show(text, version, updated) {
   const data = JSON.parse(text); songs = data.songs || data;
-  idx = new SongIndex(); idx.build(songs);
+  rebuild();
+  hooks?.onLibrary?.();
   $("app").hidden = false;
   $("count").textContent = `${songs.length.toLocaleString()} songs`;
   $("note").textContent = `Library ${version || ""}${updated ? " · just updated" : ""} · works offline`;
@@ -100,13 +101,14 @@ function show(text, version, updated) {
   render();
   if (location.hash && idx.byId.get(location.hash.slice(1))) open(location.hash.slice(1));
 }
+function rebuild() { idx = new SongIndex(); const ids = new Set(pending.map(p => p.song.id)); idx.build([...songs.filter(s => !ids.has(s.id)), ...pending.map(p => ({ ...p.song, _pending: p.state }))]); }
 function render() {
   document.querySelectorAll("#chips button").forEach(b => b.classList.toggle("on", b.dataset.k === lang));
   const res = idx.search($("q").value, { lang, limit: 150 });
   $("list").innerHTML = res.map(({ song }) => {
     const v = song.versions[lang] || song.versions[song.lang] || Object.values(song.versions)[0];
     const b = (song.books || [])[0];
-    return `<button class="song" data-id="${esc(song.id)}"><span class="n">${b ? esc(b.book + " " + b.num) : ""}</span><div class="t">${esc(v.title || song.title)}</div><div class="s">${esc(stripChords(v.sections[0]?.lines[0] || ""))}</div></button>`;
+    return `<button class="song" data-id="${esc(song.id)}"><span class="n">${b ? esc(b.book + " " + b.num) : ""}</span><div class="t">${esc(v.title || song.title)}${song._pending ? ` <span class="wait">${song._pending === "sent" ? "waiting for approval" : "not sent yet"}</span>` : ""}</div><div class="s">${esc(stripChords(v.sections[0]?.lines[0] || ""))}</div></button>`;
   }).join("") || `<p style="color:var(--muted);padding:20px 0">No songs found.</p>`;
 }
 let t; $("q").oninput = () => { clearTimeout(t); t = setTimeout(render, 80); };
@@ -120,12 +122,12 @@ function open(id, l) {
   const song = idx.byId.get(id)?.song; if (!song) return;
   const langs = Object.keys(song.versions);
   l = l || (lang && song.versions[lang] ? lang : song.lang in song.versions ? song.lang : langs[0]);
-  const v = song.versions[l];
+  const v = song.versions[l]; cur = { song, lang: l };
   const anyChords = v.sections.some(s => s.lines.some(hasChords));
   const key = song.key ? transposeKey(song.key, semis) : "";
   $("view").innerHTML = `<button class="back" id="back">‹ All songs</button>
     <h1>${esc(v.title || song.title)}</h1><div class="meta">${(song.books || []).map(b => esc(b.book + " " + b.num)).join(" · ")}${key ? " · Key " + esc(key) : ""}${song.author ? " · " + esc(song.author) : ""}</div>
-    <div class="tools"><button class="ib" id="zm">A−</button><button class="ib" id="zp">A+</button>${anyChords ? `<button class="ib" id="ch">${chordsOn ? "Hide chords" : "Chords"}</button>${chordsOn ? `<button class="ib" id="tm">−</button><button class="ib" id="tp">+</button>` : ""}` : ""}</div>
+    <div class="tools"><button class="ib" id="zm">A−</button><button class="ib" id="zp">A+</button>${hooks ? hooks.tools(song, l) : ""}${anyChords ? `<button class="ib" id="ch">${chordsOn ? "Hide chords" : "Chords"}</button>${chordsOn ? `<button class="ib" id="tm">−</button><button class="ib" id="tp">+</button>` : ""}` : ""}</div>
     ${langs.length > 1 ? `<div class="tabs">${langs.map(x => `<button data-l="${x}" class="${x === l ? "on" : ""}">${LANG_NAMES[x] || x}</button>`).join("")}</div>` : ""}
     ${v.sections.map(s => `<div class="sec" style="--sc:${sectionColor(s.label)}"><div class="lab">${esc(s.label)}</div>${s.lines.map(line).join("")}</div>`).join("")}`;
   document.body.classList.add("reading"); scrollTo(0, 0);
@@ -134,10 +136,13 @@ function open(id, l) {
   $("zm").onclick = () => z(-.1); $("zp").onclick = () => z(.1);
   if ($("ch")) $("ch").onclick = () => { chordsOn = !chordsOn; setPref("chords", chordsOn ? "1" : "0"); open(id, l); };
   if ($("tm")) { $("tm").onclick = () => { semis--; open(id, l); }; $("tp").onclick = () => { semis++; open(id, l); }; }
+  hooks?.bind(song, l);
   $("view").querySelectorAll("[data-l]").forEach(b => b.onclick = () => open(id, b.dataset.l));
   if (location.hash !== "#" + id) history.pushState(null, "", "#" + id);
 }
 addEventListener("popstate", () => { if (!location.hash) document.body.classList.remove("reading"); else open(location.hash.slice(1)); });
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => { });
+// team songbook (media team testers only): add songs, photo → text, corrections → song inbox
+if (window.RW_TEAM) import("./team.js").then(m => { hooks = m.init({ kv, esc, $, songs: () => songs, setPending: (p) => { pending = p; if (idx) { rebuild(); render(); } }, open: (id) => open(id), refreshView: () => { if (cur) open(cur.song.id, cur.lang); } }); }).catch(e => console.error(e));
 boot();
