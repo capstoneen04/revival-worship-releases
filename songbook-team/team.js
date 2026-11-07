@@ -56,7 +56,7 @@ export function init(app) {
       try {
         const r = await fetch(`${API()}/repos/${INBOX()}/contents/decisions/${q.id}.json`, { headers: { authorization: "Bearer " + await kv.get("team-key"), accept: "application/vnd.github.raw" }, cache: "no-store" });
         if (!r.ok) continue;
-        const d = await r.json(); q.decision = d; q.state = d.state === "rejected" ? "rejected" : d.state === "merged" ? "merged" : "approved"; changed = true;
+        const d = await r.json(); q.decision = d; q.state = ["rejected", "merged", "added"].includes(d.state) ? d.state : "approved"; changed = true;
       } catch { }
     }
     if (changed) { markDone(); await save(); }
@@ -92,7 +92,7 @@ export function init(app) {
     let changed = false;
     for (const q of queue.filter(q => q.state === "queued")) {
       try {
-        await gh("PUT", `/repos/${INBOX()}/contents/inbox/${q.id}.json`, { message: `${q.kind === "new" ? "New song" : "Correction"}: ${q.song.title} (${q.by})`, content: b64(JSON.stringify({ v: 1, kind: q.kind, song: q.song, by: q.by, at: q.at, note: q.note }, null, 1)) });
+        await gh("PUT", `/repos/${INBOX()}/contents/inbox/${q.id}.json`, { message: `${{ new: "New song", edit: "Correction", setlist: "Set list" }[q.kind]}: ${q.song.title} (${q.by})`, content: b64(JSON.stringify({ v: 1, kind: q.kind, song: q.song, setlist: q.setlist, by: q.by, at: q.at, note: q.note }, null, 1)) });
         q.state = "sent"; changed = true;
       } catch (e) { console.warn(e); break; }
     }
@@ -177,11 +177,12 @@ export function init(app) {
       approved: `approved ✓ as ${esc(x.decision?.book || "a new song")} — comes with the next songbook update`,
       done: `approved ✓ — in the songbook${x.decision?.book ? " as " + esc(x.decision.book) : ""}`,
       merged: `already in the songbook — ${esc(x.decision?.book || "")} “${esc(x.decision?.title || "")}” was updated with it ✓`,
+      added: `added to the service “${esc(x.decision?.service || "")}” ✓`,
       rejected: `not added${x.decision?.reason ? " — " + esc(x.decision.reason) + (x.decision.book ? " (" + esc(x.decision.book) + ")" : "") : ""}` }[x.state] || x.state);
     const list = queue.slice().reverse();
     const box = screen(`<button class="back" id="t-back">‹ Back</button><h2>My songs for the media team</h2>
       <div class="hint">Signed in as <b>${esc(pref("name", "—"))}</b> · <a href="#" id="t-who">change</a></div>
-      ${list.map(x => `<div class="mine"><b>${esc(x.song.title)}</b><span class="hint">${x.kind === "new" ? "New song" : "Correction"} · ${new Date(x.at).toLocaleString()} · ${label(x)}</span>
+      ${list.map(x => `<div class="mine"><b>${esc(x.song.title)}</b><span class="hint">${{ new: "New song", edit: "Correction", setlist: "Set list" }[x.kind]} · ${new Date(x.at).toLocaleString()} · ${label(x)}</span>
         <div><button class="ib" data-del="${x.id}">${x.state === "queued" ? "Delete" : "Remove from list"}</button></div></div>`).join("") || `<p class="hint">Nothing yet. Tap ＋ Add to send a song.</p>`}
       <div class="bar"><button class="pbtn" id="t-retry">Send now</button></div>`);
     box.querySelector("#t-back").onclick = () => box.remove();
@@ -191,9 +192,19 @@ export function init(app) {
   }
   function toastMsg(t) { const d = document.createElement("div"); d.textContent = t; d.style.cssText = "position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#111827;color:#fff;padding:10px 16px;border-radius:12px;z-index:30;font-size:14px;max-width:90vw"; document.body.appendChild(d); setTimeout(() => d.remove(), 3200); }
 
-  return {
+  const api = {
+    // a song leader's list → the media desk adds it to that day's service
+    async sendList(l) {
+      if (!(await kv.get("team-key")) || !pref("name", "")) { setup(() => api.sendList(l)); return false; }
+      const now = new Date().toISOString();
+      queue.push({ id: sid(), kind: "setlist", song: { id: "", title: `${l.title} (${l.date})` }, setlist: { title: l.title, date: l.date, items: l.items.map(x => ({ songId: x.songId, key: x.key || "", note: x.note || "" })) }, by: pref("name", ""), at: now, note: "", state: "queued" });
+      await save(); await flush();
+      toastMsg(queue.at(-1).state === "sent" ? "Sent to the media desk ✓" : "Saved — it will be sent when you are online");
+      return true;
+    },
     onLibrary: () => { markDone(); save(); },
     tools: () => `<button class="ib" id="t-fix">✎ Correct</button>`,
     bind: (song, lang) => { const b = $("t-fix"); if (b) b.onclick = () => editor({ song, lang }); },
   };
+  return api;
 }

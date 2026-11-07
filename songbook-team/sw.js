@@ -1,6 +1,6 @@
 // Offline: keep the app files; songs live in IndexedDB (already unlocked on this phone).
-const CACHE = "revival-songbook-team-2.3.0";
-const FILES = ["./", "index.html", "app.js", "search.js", "translit.js", "chords.js", "scrypt.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "live.js", "team.js", "song-import.js", "song-text.js", "krutidev.js", "ocr-core.js"];
+const CACHE = "revival-songbook-team-2.4.0";
+const FILES = ["./", "index.html", "app.js", "search.js", "translit.js", "chords.js", "scrypt.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "live.js", "lists.js", "team.js", "song-import.js", "song-text.js", "krutidev.js", "ocr-core.js"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(n => n !== CACHE).map(n => caches.delete(n)))).then(() => self.clients.claim())); });
 self.addEventListener("fetch", (e) => {

@@ -1,18 +1,18 @@
 {
- "version": "2.3.0",
- "date": "2026-11-07T15:04:35.067Z",
+ "version": "2.4.0",
+ "date": "2026-11-07T16:34:30.135Z",
  "minShell": 2,
- "notes": "2.3: the song inbox checks the whole songbook and lets you compare; phones show what the media desk decided; Live song on phones (church Wi-Fi QR code, or anywhere).",
+ "notes": "2.4: song leaders' set lists — plan on the phone (☰ Lists), send to the media desk, added to that day's service from Songs → Inbox.",
  "update": {
-  "name": "update-2.3.0.zip",
-  "size": 3095202,
-  "sha256": "b80d27015445413db49c5bc8daa44876aaac37dc4ed377463a0684164da6fe2e"
+  "name": "update-2.4.0.zip",
+  "size": 3096382,
+  "sha256": "0c924a37a2ff2a28113382fdfdb1efc5904ece8b3ef6b57510770dc0a9d93f90"
  },
  "library": {
-  "name": "church-library-26.1107.2133.rwpack",
-  "size": 3845529,
-  "sha256": "a02823bfd8ffc0877969fdfa1f05ee210120272de56b1cf91df6383a35d4e2e3",
-  "version": "26.1107.2133"
+  "name": "church-library-26.1107.2134.rwpack",
+  "size": 3844586,
+  "sha256": "17286cef393c2a73d030cb455465280e8119d4bdd689809c04a82251495364db",
+  "version": "26.1107.2134"
  },
  "installers": {}
 }

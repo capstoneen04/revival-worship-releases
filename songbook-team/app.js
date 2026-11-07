@@ -3,6 +3,7 @@
 // on the phone, with the church library password. Nothing readable is ever published.
 import { SongIndex, LANG_NAMES } from "./search.js";
 import { chordSegments, hasChords, stripChords, sectionColor, transposeKey } from "./chords.js";
+import { initLists } from "./lists.js";
 
 const RAW = "https://raw.githubusercontent.com/capstoneen04/revival-worship-releases/main/";
 const $ = (id) => document.getElementById(id);
@@ -125,9 +126,9 @@ function open(id, l) {
   const v = song.versions[l]; cur = { song, lang: l };
   const anyChords = v.sections.some(s => s.lines.some(hasChords));
   const key = song.key ? transposeKey(song.key, semis) : "";
-  $("view").innerHTML = `<button class="back" id="back">‹ All songs</button>
+  $("view").innerHTML = `<button class="back" id="back">‹ All songs</button>${lists.nav(id)}
     <h1>${esc(v.title || song.title)}</h1><div class="meta">${(song.books || []).map(b => esc(b.book + " " + b.num)).join(" · ")}${key ? " · Key " + esc(key) : ""}${song.author ? " · " + esc(song.author) : ""}</div>
-    <div class="tools"><button class="ib" id="zm">A−</button><button class="ib" id="zp">A+</button>${hooks ? hooks.tools(song, l) : ""}${anyChords ? `<button class="ib" id="ch">${chordsOn ? "Hide chords" : "Chords"}</button>${chordsOn ? `<button class="ib" id="tm">−</button><button class="ib" id="tp">+</button>` : ""}` : ""}</div>
+    <div class="tools"><button class="ib" id="zm">A−</button><button class="ib" id="zp">A+</button>${lists.tool()}${hooks ? hooks.tools(song, l) : ""}${anyChords ? `<button class="ib" id="ch">${chordsOn ? "Hide chords" : "Chords"}</button>${chordsOn ? `<button class="ib" id="tm">−</button><button class="ib" id="tp">+</button>` : ""}` : ""}</div>
     ${langs.length > 1 ? `<div class="tabs">${langs.map(x => `<button data-l="${x}" class="${x === l ? "on" : ""}">${LANG_NAMES[x] || x}</button>`).join("")}</div>` : ""}
     ${v.sections.map(s => `<div class="sec" style="--sc:${sectionColor(s.label)}"><div class="lab">${esc(s.label)}</div>${s.lines.map(line).join("")}</div>`).join("")}`;
   document.body.classList.add("reading"); scrollTo(0, 0);
@@ -136,12 +137,14 @@ function open(id, l) {
   $("zm").onclick = () => z(-.1); $("zp").onclick = () => z(.1);
   if ($("ch")) $("ch").onclick = () => { chordsOn = !chordsOn; setPref("chords", chordsOn ? "1" : "0"); open(id, l); };
   if ($("tm")) { $("tm").onclick = () => { semis--; open(id, l); }; $("tp").onclick = () => { semis++; open(id, l); }; }
-  hooks?.bind(song, l);
+  hooks?.bind(song, l); lists.bind(id);
   $("view").querySelectorAll("[data-l]").forEach(b => b.onclick = () => open(id, b.dataset.l));
   if (location.hash !== "#" + id) history.pushState(null, "", "#" + id);
 }
 addEventListener("popstate", () => { if (!location.hash) document.body.classList.remove("reading"); else open(location.hash.slice(1)); });
 
+const lists = initLists({ kv, esc, songs: () => songs, open: (id) => open(id), setSemis: (n) => { semis = n; }, get canSend() { return !!hooks?.sendList; }, sendList: (l) => hooks?.sendList?.(l) });
+$("lists").onclick = () => lists.openLists();
 $("live").onclick = () => import("./live.js").then(m => m.openLive({ kv, esc, songs: () => songs, sectionColor, stripChords }));
 if (location.hash === "#live") setTimeout(() => songs.length && $("live").click(), 300);
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => { });
