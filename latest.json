@@ -1,12 +1,12 @@
 {
  "version": "2.4.0",
- "date": "2026-11-07T16:34:30.135Z",
+ "date": "2026-11-07T16:35:07.522Z",
  "minShell": 2,
- "notes": "2.4: song leaders' set lists — plan on the phone (☰ Lists), send to the media desk, added to that day's service from Songs → Inbox.",
+ "notes": "2.4: song leaders' set lists \u2014 plan on the phone (\u2630 Lists), send to the media desk, added to that day's service from Songs \u2192 Inbox.",
  "update": {
   "name": "update-2.4.0.zip",
-  "size": 3096382,
-  "sha256": "0c924a37a2ff2a28113382fdfdb1efc5904ece8b3ef6b57510770dc0a9d93f90"
+  "size": 3096428,
+  "sha256": "c5ab381c5b610f1970d6627d7aa10e1657fb582d9510302a40cbc5986e1defbc"
  },
  "library": {
   "name": "church-library-26.1107.2134.rwpack",
