@@ -15,7 +15,9 @@ const sid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 export function init(app) {
   const { kv, esc, $ } = app;
   let queue = [];                                            // [{ id, kind, song, by, at, note, state: "queued" | "sent" }]
-  const save = async () => { await kv.set("team-queue", queue); app.setPending(queue.filter(q => q.kind === "new" || q.state !== "done")); bar(); };
+  // states: queued (not sent) → sent (waiting) → approved (desk said yes, comes with the next library update) → done (in this songbook)
+  //         or merged (it was already in the songbook; that song was updated) / rejected
+  const save = async () => { await kv.set("team-queue", queue); app.setPending(queue.filter(q => q.kind === "new" && ["queued", "sent", "approved"].includes(q.state))); bar(); };
 
   // ---------- header buttons ----------
   const css = document.createElement("style");
@@ -28,10 +30,10 @@ export function init(app) {
   .ocrst{font-size:13px;color:var(--muted);min-height:18px;margin-top:8px} .mine{border-bottom:1px solid var(--line);padding:10px 0} .mine b{display:block}`;
   document.head.appendChild(css);
   const tb = $("teambar");
-  tb.innerHTML = `<button class="ib" id="t-add" title="Add a song">＋ Add</button> <button class="ib" id="t-mine" title="My songs for the media team">Mine</button> `;
+  tb.innerHTML = `<button class="ib" id="t-add" title="Add a song">＋ Add</button><button class="ib" id="t-mine" title="My songs for the media team">Mine</button>`;
   $("t-add").onclick = () => editor();
   $("t-mine").onclick = mine;
-  function bar() { const n = queue.filter(q => q.state !== "done").length; $("t-mine").textContent = n ? `Mine (${n})` : "Mine"; }
+  function bar() { const n = queue.filter(q => q.state === "queued" || q.state === "sent").length; $("t-mine").textContent = n ? `Mine (${n})` : "Mine"; }
 
   kv.get("team-queue").then(q => { queue = q || []; if (app.songs().length) markDone(); save(); flush(); });
   addEventListener("online", flush);
@@ -39,8 +41,25 @@ export function init(app) {
   // a sent song is "done" once the published library contains it (approved by the media desk)
   function markDone() {
     const byId = new Map(app.songs().map(s => [s.id, s]));
-    for (const q of queue) if (q.state === "sent") { const s = byId.get(q.song.id); if (s && String(s.updated || "") >= String(q.song.updated || "")) q.state = "done"; }
-    queue = queue.filter(q => q.state !== "done" || Date.now() - new Date(q.at) < 14 * 864e5);
+    for (const q of queue) {
+      if (q.state !== "sent" && q.state !== "approved") continue;
+      const id = q.decision?.songId || q.song.id, s = byId.get(id);
+      if (s && String(s.updated || "") >= String(q.song.updated || "")) { q.state = q.decision?.state === "merged" ? "merged" : "done"; q.decision = { ...(q.decision || {}), book: (s.books || []).map(b => b.book + " " + b.num).join(", ") }; }
+    }
+    queue = queue.filter(q => ["queued", "sent", "approved"].includes(q.state) || Date.now() - new Date(q.at) < 14 * 864e5);
+  }
+  // what did the media desk decide? (decisions/<id>.json in the song inbox)
+  async function checkDecisions() {
+    if (!navigator.onLine || !(await kv.get("team-key"))) return;
+    let changed = false;
+    for (const q of queue.filter(q => q.state === "sent")) {
+      try {
+        const r = await fetch(`${API()}/repos/${INBOX()}/contents/decisions/${q.id}.json`, { headers: { authorization: "Bearer " + await kv.get("team-key"), accept: "application/vnd.github.raw" }, cache: "no-store" });
+        if (!r.ok) continue;
+        const d = await r.json(); q.decision = d; q.state = d.state === "rejected" ? "rejected" : d.state === "merged" ? "merged" : "approved"; changed = true;
+      } catch { }
+    }
+    if (changed) { markDone(); await save(); }
   }
 
   // ---------- who am I ----------
@@ -78,6 +97,7 @@ export function init(app) {
       } catch (e) { console.warn(e); break; }
     }
     if (changed) save();
+    await checkDecisions();
   }
 
   // ---------- screens ----------
@@ -151,13 +171,18 @@ export function init(app) {
     } catch (e) { st.textContent = "Could not read the photo: " + e.message; }
   }
 
-  function mine() {
-    markDone();
+  async function mine() {
+    markDone(); await checkDecisions().catch(() => { });
+    const label = (x) => ({ queued: "not sent yet (offline)", sent: "waiting for approval",
+      approved: `approved ✓ as ${esc(x.decision?.book || "a new song")} — comes with the next songbook update`,
+      done: `approved ✓ — in the songbook${x.decision?.book ? " as " + esc(x.decision.book) : ""}`,
+      merged: `already in the songbook — ${esc(x.decision?.book || "")} “${esc(x.decision?.title || "")}” was updated with it ✓`,
+      rejected: `not added${x.decision?.reason ? " — " + esc(x.decision.reason) + (x.decision.book ? " (" + esc(x.decision.book) + ")" : "") : ""}` }[x.state] || x.state);
     const list = queue.slice().reverse();
     const box = screen(`<button class="back" id="t-back">‹ Back</button><h2>My songs for the media team</h2>
       <div class="hint">Signed in as <b>${esc(pref("name", "—"))}</b> · <a href="#" id="t-who">change</a></div>
-      ${list.map(x => `<div class="mine"><b>${esc(x.song.title)}</b><span class="hint">${x.kind === "new" ? "New song" : "Correction"} · ${new Date(x.at).toLocaleString()} · ${{ queued: "not sent yet (offline)", sent: "waiting for approval", done: "approved ✓ — in the songbook" }[x.state]}</span>
-        ${x.state === "queued" ? `<div><button class="ib" data-del="${x.id}">Delete</button></div>` : ""}</div>`).join("") || `<p class="hint">Nothing yet. Tap ＋ Add to send a song.</p>`}
+      ${list.map(x => `<div class="mine"><b>${esc(x.song.title)}</b><span class="hint">${x.kind === "new" ? "New song" : "Correction"} · ${new Date(x.at).toLocaleString()} · ${label(x)}</span>
+        <div><button class="ib" data-del="${x.id}">${x.state === "queued" ? "Delete" : "Remove from list"}</button></div></div>`).join("") || `<p class="hint">Nothing yet. Tap ＋ Add to send a song.</p>`}
       <div class="bar"><button class="pbtn" id="t-retry">Send now</button></div>`);
     box.querySelector("#t-back").onclick = () => box.remove();
     box.querySelector("#t-who").onclick = (e) => { e.preventDefault(); box.remove(); setup(); };

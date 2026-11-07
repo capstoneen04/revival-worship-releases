@@ -23,3 +23,6 @@ Enter the church library password once — the songs are unlocked on the phone a
 **https://capstoneen04.github.io/revival-worship-releases/songbook-team/** — same songbook plus **＋ Add** (type a song or 📷 photo → text) and **✎ Correct**.
 It asks once for your name and the **team key** from the media team. Songs go to the private song inbox; the media desk approves them in
 **Songs → Inbox** and presses **Settings → Team songbook → Publish library** — then every computer and phone gets them.
+
+## Live (follow the projector on your phone)
+Tap **● Live** in the songbook. When the media desk has *Settings → Live song on phones → Anywhere* switched on, the song or Bible verse on the projector shows on your phone — at church or at home. On church Wi-Fi you can also scan the QR code from the media desk.

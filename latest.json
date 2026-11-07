@@ -1,17 +1,17 @@
 {
- "version": "2.2.1",
- "date": "2026-11-07T14:51:52.074Z",
+ "version": "2.3.0",
+ "date": "2026-11-07T15:04:35.067Z",
  "minShell": 2,
- "notes": "2.2.1: Add and edit from the Inbox opens the lyrics editor; new songs are numbered automatically (next RH number); warning when a sent song is already in the songbook; Fix Kruti Dev keeps labels, chords and English lines; deleted songs are removed everywhere after Publish.",
+ "notes": "2.3: the song inbox checks the whole songbook and lets you compare; phones show what the media desk decided; Live song on phones (church Wi-Fi QR code, or anywhere).",
  "update": {
-  "name": "update-2.2.1.zip",
-  "size": 3089858,
-  "sha256": "7d114e3acb1eb0ff4eef13de2fe2b8a8592e198463b897d656cf6eb9ffa3b05b"
+  "name": "update-2.3.0.zip",
+  "size": 3095202,
+  "sha256": "b80d27015445413db49c5bc8daa44876aaac37dc4ed377463a0684164da6fe2e"
  },
  "library": {
   "name": "church-library-26.1107.2017.rwpack",
-  "size": 3839021,
-  "sha256": "ace422004ad5d3791f745396b74ace0221dbab1de7f464410aa3ba13f5ee2725",
+  "size": 3839020,
+  "sha256": "ec605c8d8f2e0f556d0b60cd3f1679a73024aad2274ceadccc3f186ee2d5477e",
   "version": "26.1107.2017"
  },
  "installers": {}

@@ -108,7 +108,7 @@ function render() {
   $("list").innerHTML = res.map(({ song }) => {
     const v = song.versions[lang] || song.versions[song.lang] || Object.values(song.versions)[0];
     const b = (song.books || [])[0];
-    return `<button class="song" data-id="${esc(song.id)}"><span class="n">${b ? esc(b.book + " " + b.num) : ""}</span><div class="t">${esc(v.title || song.title)}${song._pending ? ` <span class="wait">${song._pending === "sent" ? "waiting for approval" : "not sent yet"}</span>` : ""}</div><div class="s">${esc(stripChords(v.sections[0]?.lines[0] || ""))}</div></button>`;
+    return `<button class="song" data-id="${esc(song.id)}"><span class="n">${b ? esc(b.book + " " + b.num) : ""}</span><div class="t">${esc(v.title || song.title)}${song._pending ? ` <span class="wait">${{ sent: "waiting for approval", approved: "approved — coming soon", queued: "not sent yet" }[song._pending] || ""}</span>` : ""}</div><div class="s">${esc(stripChords(v.sections[0]?.lines[0] || ""))}</div></button>`;
   }).join("") || `<p style="color:var(--muted);padding:20px 0">No songs found.</p>`;
 }
 let t; $("q").oninput = () => { clearTimeout(t); t = setTimeout(render, 80); };
@@ -142,6 +142,8 @@ function open(id, l) {
 }
 addEventListener("popstate", () => { if (!location.hash) document.body.classList.remove("reading"); else open(location.hash.slice(1)); });
 
+$("live").onclick = () => import("./live.js").then(m => m.openLive({ kv, esc, songs: () => songs, sectionColor, stripChords }));
+if (location.hash === "#live") setTimeout(() => songs.length && $("live").click(), 300);
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => { });
 // team songbook (media team testers only): add songs, photo → text, corrections → song inbox
 if (window.RW_TEAM) import("./team.js").then(m => { hooks = m.init({ kv, esc, $, songs: () => songs, setPending: (p) => { pending = p; if (idx) { rebuild(); render(); } }, open: (id) => open(id), refreshView: () => { if (cur) open(cur.song.id, cur.lang); } }); }).catch(e => console.error(e));

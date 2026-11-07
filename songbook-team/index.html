@@ -42,6 +42,14 @@
   .err{color:#e5484d;min-height:20px;font-size:14px;margin-top:8px}
   .note{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0}
   .wait{font-size:11px;font-weight:600;color:#b45309;background:#fef3c7;border-radius:6px;padding:1px 6px;margin-left:4px;vertical-align:2px}
+  .live-btn{color:#e5484d;font-weight:600}
+  .acts{display:flex;gap:8px;margin-bottom:10px} .acts>*{flex:1} .acts #teambar{display:flex;gap:8px;flex:2} .acts #teambar:empty{display:none} .acts #teambar .ib{flex:1} body.reading .acts{display:none}
+  .live{position:fixed;inset:0;z-index:15;background:var(--bg);overflow:auto} body.living{overflow:hidden}
+  .lv-top{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:8px;z-index:2}
+  .lv-dot{width:9px;height:9px;border-radius:50%;background:#9ca3af} .lv-dot.on{background:#e5484d;box-shadow:0 0 0 3px rgba(229,72,77,.2)} .lv-st{color:var(--muted);font-size:12.5px}
+  .lv-body{max-width:780px;margin:0 auto;padding:8px 16px 80px} .lv-body .muted{color:var(--muted);font-size:14px;line-height:1.5}
+  .lv-sec{border-radius:12px;padding:10px 12px;margin:0 -12px 8px;font-size:calc(18px * var(--zoom));line-height:1.6;transition:background .25s}
+  .lv-sec.cur{background:rgba(250,204,21,.18);box-shadow:inset 3px 0 0 var(--accent)} .lv-sec .l2{color:var(--muted);font-size:.9em}
   [hidden]{display:none!important}
 </style>
 </head>
@@ -55,7 +63,8 @@
 </div>
 <div id="app" hidden>
 <header>
-  <div class="brand"><img src="icon-192.png" alt=""><div><b>Songbook Team</b><br><span id="count"></span></div><div class="sp"></div><span id="teambar"></span><button class="ib" id="theme" title="Light / dark">◐</button></div>
+  <div class="brand"><img src="icon-192.png" alt=""><div><b>Songbook Team</b><br><span id="count"></span></div><div class="sp"></div><button class="ib" id="theme" title="Light / dark">◐</button></div>
+  <div class="acts"><button class="ib live-btn" id="live" title="Follow the song on the projector">● Live</button><span id="teambar"></span></div>
   <input id="q" type="search" placeholder="Search number, title or words — हिंदी, Hinglish, English" autocomplete="off">
   <div class="chips" id="chips"></div>
 </header>
