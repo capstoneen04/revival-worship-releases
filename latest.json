@@ -1,29 +1,18 @@
 {
- "version": "2.2.0",
- "date": "2026-11-07T10:19:32.179Z",
+ "version": "2.2.1",
+ "date": "2026-11-07T14:51:52.074Z",
  "minShell": 2,
- "notes": "Revival Worship 2.2: team songbook on phones (add songs, photo → text, corrections), Songs → Inbox to approve them, Settings → Team songbook → Publish library so every computer and phone gets the new songs.",
+ "notes": "2.2.1: Add and edit from the Inbox opens the lyrics editor; new songs are numbered automatically (next RH number); warning when a sent song is already in the songbook; Fix Kruti Dev keeps labels, chords and English lines; deleted songs are removed everywhere after Publish.",
  "update": {
-  "name": "update-2.2.0.zip",
-  "size": 3088419,
-  "sha256": "60209a53e5eacc9ee272d8ea4e8c0cdaceffa0e6d028c560598dfd7c8e70eff8"
+  "name": "update-2.2.1.zip",
+  "size": 3089858,
+  "sha256": "7d114e3acb1eb0ff4eef13de2fe2b8a8592e198463b897d656cf6eb9ffa3b05b"
  },
  "library": {
-  "name": "church-library-26.1107.2016.rwpack",
-  "size": 3839948,
-  "sha256": "835239289ce88556258b231bcffb81e1c6a8daffc492b81737d8ad58be92f380",
-  "version": "26.1107.2016"
+  "name": "church-library-26.1107.2017.rwpack",
+  "size": 3839021,
+  "sha256": "ace422004ad5d3791f745396b74ace0221dbab1de7f464410aa3ba13f5ee2725",
+  "version": "26.1107.2017"
  },
- "installers": {
-  "mac": {
-   "name": "Revival-Worship-2.2.0-mac-arm64.zip",
-   "size": 212405072,
-   "sha256": "f035a41df160954c2527c7642afd634ea91637e450e0ea3d7807cc8fc04c5629"
-  },
-  "win": {
-   "name": "Revival-Worship-Setup-2.2.0-win-x64.exe",
-   "size": 190178359,
-   "sha256": "1892bbad6aeb5ed0818878e8b820d6c9f3fea56fb6aa43fd4f7bd4c1cbec39d2"
-  }
- }
+ "installers": {}
 }

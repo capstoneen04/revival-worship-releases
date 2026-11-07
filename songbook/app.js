@@ -87,7 +87,7 @@ async function refresh(have) {                       // new songs from the media
 }
 
 function show(text, version, updated) {
-  const data = JSON.parse(text); songs = data.songs || data;
+  const data = JSON.parse(text); songs = (data.songs || data).filter(s => !data.deleted?.[s.id]);
   rebuild();
   hooks?.onLibrary?.();
   $("app").hidden = false;
