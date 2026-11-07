@@ -9,10 +9,10 @@
   "sha256": "b80d27015445413db49c5bc8daa44876aaac37dc4ed377463a0684164da6fe2e"
  },
  "library": {
-  "name": "church-library-26.1107.2112.rwpack",
-  "size": 3842555,
-  "sha256": "a50d5cbc32a8687348e23b6cc378419897853289a4569b2530d2e40becee7401",
-  "version": "26.1107.2112"
+  "name": "church-library-26.1107.2133.rwpack",
+  "size": 3845529,
+  "sha256": "a02823bfd8ffc0877969fdfa1f05ee210120272de56b1cf91df6383a35d4e2e3",
+  "version": "26.1107.2133"
  },
  "installers": {}
 }
