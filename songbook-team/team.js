@@ -121,6 +121,7 @@ export function init(app) {
         <div><label>Book & number (optional)</label><input id="t-book" value="${esc(books ? books.book + " " + books.num : "")}" placeholder="e.g. SK 12"></div></div>
       <label>Lyrics</label>
       <div class="row" style="margin-bottom:8px"><button class="pbtn" id="t-photo">📷 Photo → text</button><select id="t-olang"><option value="hin+eng">Hindi + English</option><option value="hin">Hindi</option><option value="eng">English</option><option value="mar">Marathi</option></select></div>
+      <button class="pbtn" id="t-hing" style="width:100%;margin-bottom:8px">Hinglish → हिंदी (typed in English letters)</button>
       <input type="file" id="t-file" accept="image/*" hidden>
       <div class="ocrst" id="t-ost"></div>
       <textarea id="t-text" placeholder="[Verse 1]\nfirst line\nsecond line\n\n[Chorus]\n…">${esc(v ? sectionsToText(v.sections) : "")}</textarea>
@@ -133,6 +134,15 @@ export function init(app) {
     q("#t-back").onclick = q("#t-cancel").onclick = () => box.remove();
     q("#t-photo").onclick = () => q("#t-file").click();
     q("#t-file").onchange = () => photo(q("#t-file").files[0], q);
+    q("#t-hing").onclick = async () => {
+      const { loadHinglishDict, hinglishToHindi, looksHinglish } = await import("./hinglish.js");
+      const ta = q("#t-text"); if (!looksHinglish(ta.value)) { q("#t-ost").textContent = "Type or paste the Hinglish lyrics first."; return; }
+      const dict = await loadHinglishDict("hinglish-dict.json");
+      const body = hinglishToHindi(ta.value, dict), head = hinglishToHindi(q("#t-title").value, dict);
+      ta.value = body.text; if (q("#t-title").value) q("#t-title").value = head.text;
+      const unk = [...new Set([...head.unknown, ...body.unknown])];
+      q("#t-ost").textContent = unk.length ? `Converted. Please check: ${unk.join(", ")}` : "Converted — please read it through once.";
+    };
     q("#t-send").onclick = async () => {
       const title = q("#t-title").value.trim(), text = q("#t-text").value.trim();
       if (!title || !text) { q("#t-st").textContent = "Add a title and the lyrics."; return; }

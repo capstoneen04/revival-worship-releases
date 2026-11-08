@@ -1,17 +1,17 @@
 {
- "version": "2.4.3",
- "date": "2026-11-08T01:47:55.275Z",
+ "version": "2.5.0",
+ "date": "2026-11-08T15:01:45.040Z",
  "minShell": 2,
- "notes": "2.4.3: ready for a new church library password (asks once, keeps your songs meanwhile); Live text size on phones.",
+ "notes": "2.5: name cards fade after 5 s; Blank/Clear/Esc clear the lower third; fades (300/600 ms) incl. OBS scenes; Outline lyrics look; The Table: correct sermon titles, Lower third/Projector buttons and Follow; Hinglish → हिंदी; Title/Subject/Inspiration always English then Hindi.",
  "update": {
-  "name": "update-2.4.3.zip",
-  "size": 3097841,
-  "sha256": "4dc6ab778646137a1d5b3e68e7fec54fdabd28996219a6642c7456228800066a"
+  "name": "update-2.5.0.zip",
+  "size": 3174310,
+  "sha256": "12c9cb61c679d694c07f8969a886a2ca3da18cd27bc14a00413060d6d8512c8b"
  },
  "library": {
   "name": "church-library-26.1108.0147.rwpack",
-  "size": 3844751,
-  "sha256": "299d6a53f94b3bd7933f7780addcaf2c977e555acc6506b808b74cc725e17233",
+  "size": 3844750,
+  "sha256": "77038f974b90cc71ca11a40a08f79f260097d87580d41c941293aa7e1146f92b",
   "version": "26.1108.0147"
  },
  "installers": {}
