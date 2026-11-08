@@ -1,17 +1,17 @@
 {
- "version": "2.5.0",
- "date": "2026-11-08T15:01:45.040Z",
+ "version": "2.5.1",
+ "date": "2026-11-08T15:27:57.546Z",
  "minShell": 2,
- "notes": "2.5: name cards fade after 5 s; Blank/Clear/Esc clear the lower third; fades (300/600 ms) incl. OBS scenes; Outline lyrics look; The Table: correct sermon titles, Lower third/Projector buttons and Follow; Hinglish → हिंदी; Title/Subject/Inspiration always English then Hindi.",
+ "notes": "2.5.1: The Table Follow is immediate (updates while you scroll), click a paragraph to send it.",
  "update": {
-  "name": "update-2.5.0.zip",
-  "size": 3174310,
-  "sha256": "12c9cb61c679d694c07f8969a886a2ca3da18cd27bc14a00413060d6d8512c8b"
+  "name": "update-2.5.1.zip",
+  "size": 3174683,
+  "sha256": "0ce1f4d67156345dd1f81f582911cde821f87d1e44f16e7e7b23865156ecbe1e"
  },
  "library": {
   "name": "church-library-26.1108.0147.rwpack",
-  "size": 3844750,
-  "sha256": "77038f974b90cc71ca11a40a08f79f260097d87580d41c941293aa7e1146f92b",
+  "size": 3844751,
+  "sha256": "e827976a5e1e79218ec652037158bcc66a48245da018b4f74f530877aebf3ca7",
   "version": "26.1108.0147"
  },
  "installers": {}
