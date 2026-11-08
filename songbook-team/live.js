@@ -12,12 +12,15 @@ export async function openLive({ kv, esc, songs, sectionColor, stripChords }) {
   const byId = new Map(songs().map(s => [s.id, s]));
 
   const box = document.createElement("div"); box.className = "live";
-  box.innerHTML = `<div class="lv-top"><button class="back" id="lv-back">‹ Songs</button><span class="lv-dot" id="lv-dot"></span><b>Live</b><span style="flex:1"></span><span class="lv-st" id="lv-st">connecting…</span></div><div class="lv-body" id="lv-body"><p class="muted">Waiting for the media desk… When a song or Bible verse is on the projector it shows here.</p><p class="muted lv-wifi">At church you can also scan the QR code from the media desk (church Wi-Fi).</p></div>`;
+  box.innerHTML = `<div class="lv-top"><button class="back" id="lv-back">‹ Songs</button><span class="lv-dot" id="lv-dot"></span><b>Live</b><span style="flex:1"></span><span class="lv-st" id="lv-st">connecting…</span><button class="ib" id="lv-zm" title="Smaller text">A−</button><button class="ib" id="lv-zp" title="Bigger text">A+</button></div><div class="lv-body" id="lv-body"><p class="muted">Waiting for the media desk… When a song or Bible verse is on the projector it shows here.</p><p class="muted lv-wifi">At church you can also scan the QR code from the media desk (church Wi-Fi).</p></div>`;
   document.body.appendChild(box); document.body.classList.add("living");
   const $b = box.querySelector("#lv-body"), $st = box.querySelector("#lv-st"), $dot = box.querySelector("#lv-dot");
   let es = null, shownSong = null, closed = false;
   const close = () => { closed = true; es?.close(); box.remove(); document.body.classList.remove("living"); };
   box.querySelector("#lv-back").onclick = close;
+  // text size: each person's own choice, remembered on this phone (same setting as the song pages)
+  const zoomBy = (d) => { let z = +(getComputedStyle(document.documentElement).getPropertyValue("--zoom") || 1); z = Math.min(2.2, Math.max(.8, +(z + d).toFixed(2))); document.documentElement.style.setProperty("--zoom", z); try { localStorage.setItem("sb-zoom", z); } catch { } };
+  box.querySelector("#lv-zm").onclick = () => zoomBy(-.1); box.querySelector("#lv-zp").onclick = () => zoomBy(.1);
 
   async function decrypt(b64) {
     const raw = Uint8Array.from(atob(b64), c => c.charCodeAt(0));

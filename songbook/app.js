@@ -132,7 +132,7 @@ function open(id, l) {
     ${langs.length > 1 ? `<div class="tabs">${langs.map(x => `<button data-l="${x}" class="${x === l ? "on" : ""}">${LANG_NAMES[x] || x}</button>`).join("")}</div>` : ""}
     ${v.sections.map(s => `<div class="sec" style="--sc:${sectionColor(s.label)}"><div class="lab">${esc(s.label)}</div>${s.lines.map(line).join("")}</div>`).join("")}`;
   document.body.classList.add("reading"); scrollTo(0, 0);
-  const z = (d) => { zoom = Math.min(1.9, Math.max(.8, +(zoom + d).toFixed(2))); setPref("zoom", zoom); document.documentElement.style.setProperty("--zoom", zoom); };
+  const z = (d) => { zoom = +(getComputedStyle(document.documentElement).getPropertyValue("--zoom") || zoom); zoom = Math.min(2.2, Math.max(.8, +(zoom + d).toFixed(2))); setPref("zoom", zoom); document.documentElement.style.setProperty("--zoom", zoom); };
   $("back").onclick = () => { document.body.classList.remove("reading"); history.back(); };
   $("zm").onclick = () => z(-.1); $("zp").onclick = () => z(.1);
   if ($("ch")) $("ch").onclick = () => { chordsOn = !chordsOn; setPref("chords", chordsOn ? "1" : "0"); open(id, l); };
