@@ -1,18 +1,18 @@
 {
- "version": "2.4.2",
- "date": "2026-11-07T17:33:50.895Z",
+ "version": "2.4.3",
+ "date": "2026-11-08T01:47:55.275Z",
  "minShell": 2,
- "notes": "2.4.2: Review works when the inbox is opened from Settings.",
+ "notes": "2.4.3: ready for a new church library password (asks once, keeps your songs meanwhile); Live text size on phones.",
  "update": {
-  "name": "update-2.4.2.zip",
-  "size": 3097552,
-  "sha256": "7a67eebe064178ec08420f1975bfd4c84b8cf67d9dfa0d958b893be53bf0171e"
+  "name": "update-2.4.3.zip",
+  "size": 3097841,
+  "sha256": "4dc6ab778646137a1d5b3e68e7fec54fdabd28996219a6642c7456228800066a"
  },
  "library": {
-  "name": "church-library-26.1107.2327.rwpack",
-  "size": 3844768,
-  "sha256": "d2ff730e3dc5873090a0eca7ba08b8a441c9429f10844a0aa323f3485d9fb335",
-  "version": "26.1107.2327"
+  "name": "church-library-26.1108.0147.rwpack",
+  "size": 3844751,
+  "sha256": "299d6a53f94b3bd7933f7780addcaf2c977e555acc6506b808b74cc725e17233",
+  "version": "26.1108.0147"
  },
  "installers": {}
 }

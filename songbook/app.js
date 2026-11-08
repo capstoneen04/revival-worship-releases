@@ -82,9 +82,18 @@ async function refresh(have) {                       // new songs from the media
   try {
     const { json } = await getJson("latest.json"); const v = json.library?.version; if (!v || v === have) return;
     const key = await kv.get("key"); if (!key) return;
-    const { buf, version } = await fetchPack(); const text = await decrypt(buf, key);
+    const { buf, version } = await fetchPack();
+    let text; try { text = await decrypt(buf, key); } catch { return newPassword(buf, version); }   // the church library password was changed
     await kv.set("songs", { text, version }); show(text, version, true);
   } catch { }
+}
+function newPassword(buf, version) {
+  const n = $("note"); n.innerHTML = `<b>New songs are waiting.</b> The songbook password was changed — enter the new one:<br><input id="np" type="password" placeholder="New password" style="margin:8px 0;max-width:260px;height:40px;text-align:center"> <button class="ib" id="npb">Unlock</button> <span id="npe"></span>`;
+  n.style.color = "var(--ink)";
+  $("npb").onclick = async () => {
+    try { const key = await deriveKey($("np").value, splitPack(buf).header); const text = await decrypt(buf, key); await kv.set("key", key); await kv.set("songs", { text, version }); n.style.color = ""; show(text, version, true); }
+    catch (e) { $("npe").textContent = e.message; }
+  };
 }
 
 function show(text, version, updated) {
