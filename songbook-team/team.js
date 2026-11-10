@@ -3,7 +3,6 @@
 import { makeSong } from "./song-import.js";
 import { textToSections, sectionsToText } from "./song-text.js";
 import { romanize, capitalizeLines } from "./translit.js";
-import { initApprove } from "./approve.js";
 
 const pref = (k, d) => { try { return localStorage.getItem("sbt-" + k) ?? d; } catch { return d; } };
 const setPref = (k, v) => { try { localStorage.setItem("sbt-" + k, v); } catch { } };
@@ -31,13 +30,11 @@ export function init(app) {
   .ocrst{font-size:13px;color:var(--muted);min-height:18px;margin-top:8px} .mine{border-bottom:1px solid var(--line);padding:10px 0} .mine b{display:block}`;
   document.head.appendChild(css);
   const tb = $("teambar");
-  const approver = () => pref("approver", "") === "1";
   function teambar() {
-    tb.innerHTML = `<button class="ib" id="t-lead" title="Lead live: everyone's Live tab follows this phone">📡 Lead</button><button class="ib" id="t-add" title="Add a song">＋ Add</button><button class="ib" id="t-mine" title="My songs for the media team">Mine</button>${approver() ? `<button class="ib" id="t-inbox" title="Approve songs and publish the songbook">Inbox</button>` : ""}`;
+    tb.innerHTML = `<button class="ib" id="t-lead" title="Lead live: everyone's Live tab follows this phone">📡 Lead</button><button class="ib" id="t-add" title="Add a song">＋ Add</button><button class="ib" id="t-mine" title="My songs for the media team">Mine</button>`;
     $("t-add").onclick = () => editor();
     $("t-mine").onclick = mine;
     $("t-lead").onclick = () => lead();
-    if ($("t-inbox")) $("t-inbox").onclick = async () => { if (!(await kv.get("team-key"))) return setup(() => approve.openInbox()); approve.openInbox(); };
     bar();
   }
   // Lead live: no laptop needed — tap verses, every phone's ● Live tab follows (the media desk wins while it is sending)
@@ -82,7 +79,6 @@ export function init(app) {
       <label>Your name</label><input id="t-name" value="${esc(pref("name", ""))}" placeholder="e.g. Br. Enoch">
       <label>Team key (from the media team)</label><input id="t-key" type="password" placeholder="github_pat_…" autocomplete="off">
       <div class="hint">The key lets this phone send songs to the church's private song inbox. Keep it to yourself.</div>
-      <label style="display:flex;gap:10px;align-items:flex-start;color:var(--ink);font-size:14px;margin-top:14px"><input type="checkbox" id="t-appr" style="width:22px;height:22px;flex:0 0 auto" ${pref("approver", "") === "1" ? "checked" : ""}><span>This phone approves songs and publishes the songbook<br><span class="hint">Only for the media team leader. Needs the <b>desk key</b> (song inbox + releases repositories), not the normal team key.</span></span></label>
       <div class="bar"><button class="pbtn" id="t-x">Cancel</button><button class="pbtn pri" id="t-ok">Save</button></div><div class="ocrst" id="t-st"></div>`);
     box.querySelector("#t-x").onclick = () => box.remove();
     box.querySelector("#t-ok").onclick = async () => {
@@ -90,9 +86,7 @@ export function init(app) {
       if (!name || !key) { box.querySelector("#t-st").textContent = "Enter your name and the team key."; return; }
       box.querySelector("#t-st").textContent = "Checking the key…";
       try { await gh("GET", `/repos/${INBOX()}`, null, key); } catch (e) { box.querySelector("#t-st").textContent = e.message; return; }
-      const appr = box.querySelector("#t-appr").checked;
-      if (appr) { box.querySelector("#t-st").textContent = "Checking the releases repository…"; try { await gh("GET", `/repos/${pref("releases", "capstoneen04/revival-worship-releases")}/contents/latest.json`, null, key); } catch (e) { box.querySelector("#t-st").textContent = e.message; return; } }
-      setPref("name", name); setPref("approver", appr ? "1" : ""); await kv.set("team-key", key); box.remove(); teambar(); then?.();
+      setPref("name", name); await kv.set("team-key", key); box.remove(); teambar(); then?.();
     };
   }
   async function gh(method, url, body, key) {
@@ -127,12 +121,11 @@ export function init(app) {
 
   async function editor(edit) {
     if (!(await kv.get("team-key")) || !pref("name", "")) return setup(() => editor(edit));
-    const song = edit?.song, lang = edit?.lang, appr = edit?.approve;
+    const song = edit?.song, lang = edit?.lang;
     const v = song ? song.versions[lang] : null;
     const books = song?.books?.[0];
     const box = screen(`<button class="back" id="t-back">‹ Back</button>
-      <h2>${appr ? (appr.isNew ? "Review new song" : "Review correction") : song ? "Correct this song" : "Add a song"}</h2>
-      ${appr ? `<div class="hint" style="background:rgba(59,130,246,.12);border-radius:10px;padding:8px 10px">From <b>${esc(appr.by)}</b>. ${appr.isNew ? `Checked against the whole songbook — not there yet. It gets <b>${esc(appr.nextNum)}</b> unless you type a number. ` : ""}Fix anything, then <b>Approve &amp; publish</b> — it goes into everyone's songbook. Back keeps it in the inbox.</div>` : ""}
+      <h2>${song ? "Correct this song" : "Add a song"}</h2>
       <label>Title</label><input id="t-title" value="${esc(v?.title || "")}" placeholder="Song title">
       <div class="row"><div><label>Key (optional)</label><input id="t-keyx" value="${esc(song?.key || "")}" placeholder="e.g. G"></div>
         <div><label>Book & number (optional)</label><input id="t-book" value="${esc(books ? books.book + " " + books.num : "")}" placeholder="e.g. SK 12"></div></div>
@@ -143,8 +136,8 @@ export function init(app) {
       <div class="ocrst" id="t-ost"></div>
       <textarea id="t-text" placeholder="[Verse 1]\nfirst line\nsecond line\n\n[Chorus]\n…">${esc(v ? sectionsToText(v.sections) : "")}</textarea>
       <div class="hint">Put [Verse 1], [Chorus], [Bridge] above each part (or “Chorus” on its own line). Chords optional: [G]Amazing [C]grace. Hindi gets its Hinglish version made automatically.</div>
-      ${appr ? `<input id="t-note" type="hidden">` : `<label>Note for the media team (optional)</label><input id="t-note" placeholder="${song ? "What did you correct?" : "Where is this song from?"}">`}
-      <div class="bar"><button class="pbtn" id="t-cancel">${appr ? "Back" : "Cancel"}</button><button class="pbtn pri" id="t-send">${appr ? "Approve &amp; publish" : song ? "Send correction" : "Send to media team"}</button></div>
+      <label>Note for the media team (optional)</label><input id="t-note" placeholder="${song ? "What did you correct?" : "Where is this song from?"}">
+      <div class="bar"><button class="pbtn" id="t-cancel">Cancel</button><button class="pbtn pri" id="t-send">${song ? "Send correction" : "Send to media team"}</button></div>
       <div class="ocrst" id="t-st"></div>`);
     const q = (s) => box.querySelector(s);
     q("#t-olang").value = pref("olang", "hin+eng");
@@ -179,7 +172,6 @@ export function init(app) {
       out.key = q("#t-keyx").value.trim();
       const bk = q("#t-book").value.trim().match(/^([A-Za-z]+)\s*(\d+)$/); if (bk) out.books = [{ book: bk[1].toUpperCase(), num: +bk[2] }];
       out.updated = now;
-      if (appr) { q("#t-send").disabled = true; const ok = await appr.go(out); if (ok) box.remove(); else q("#t-send").disabled = false; return; }
       // correcting a song that is still waiting at the media desk → update that same submission (no pile of copies in the inbox)
       const waiting = song && queue.find(x => x.song.id === song.id && (x.state === "queued" || x.state === "sent"));
       if (waiting) { waiting.song = out; waiting.at = now; waiting.note = [waiting.note, q("#t-note").value.trim()].filter(Boolean).join(" · "); if (waiting.state === "sent") waiting.update = true; waiting.state = "queued"; queue.push(queue.splice(queue.indexOf(waiting), 1)[0]); }
@@ -229,7 +221,6 @@ export function init(app) {
   }
   function toastMsg(t) { const d = document.createElement("div"); d.textContent = t; d.style.cssText = "position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#111827;color:#fff;padding:10px 16px;border-radius:12px;z-index:30;font-size:14px;max-width:90vw"; document.body.appendChild(d); setTimeout(() => d.remove(), 3200); }
 
-  const approve = initApprove({ kv, esc, app, screen, toastMsg, editor, pref, API, INBOX });
   teambar();
   const api = {
     // a song leader's list → the media desk adds it to that day's service
