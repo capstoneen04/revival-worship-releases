@@ -113,14 +113,14 @@ function show(text, version, updated) {
   render();
   if (location.hash && idx.byId.get(location.hash.slice(1))) open(location.hash.slice(1));
 }
-function rebuild() { idx = new SongIndex(); const ids = new Set(pending.map(p => p.song.id)); idx.build([...songs.filter(s => !ids.has(s.id)), ...pending.map(p => ({ ...p.song, _pending: p.state }))]); }
+function rebuild() { idx = new SongIndex(); const have = new Set(songs.map(s => s.id)), ids = new Set(pending.map(p => p.song.id)); idx.build([...songs.filter(s => !ids.has(s.id)), ...pending.filter(p => !(p.state === "team" && have.has(p.song.id))).map(p => ({ ...p.song, _pending: p.state, _by: p.by }))]); }
 function render() {
   document.querySelectorAll("#chips button").forEach(b => b.classList.toggle("on", b.dataset.k === lang));
   const res = idx.search($("q").value, { lang, limit: 150 });
   $("list").innerHTML = res.map(({ song }) => {
     const v = song.versions[lang] || song.versions[song.lang] || Object.values(song.versions)[0];
     const b = (song.books || [])[0];
-    return `<button class="song" data-id="${esc(song.id)}"><span class="n">${b ? esc(b.book + " " + b.num) : ""}</span><div class="t">${esc(v.title || song.title)}${song._pending ? ` <span class="wait">${{ sent: "waiting for approval", approved: "approved — coming soon", queued: "not sent yet" }[song._pending] || ""}</span>` : ""}</div><div class="s">${esc(stripChords(v.sections[0]?.lines[0] || ""))}</div></button>`;
+    return `<button class="song" data-id="${esc(song.id)}"><span class="n">${b ? esc(b.book + " " + b.num) : ""}</span><div class="t">${esc(v.title || song.title)}${song._pending ? ` <span class="wait">${{ sent: "waiting for approval", approved: "approved — coming soon", queued: "not sent yet", team: "waiting · added by " + esc(song._by || "team") }[song._pending] || ""}</span>` : ""}</div><div class="s">${esc(stripChords(v.sections[0]?.lines[0] || ""))}</div></button>`;
   }).join("") || `<p style="color:var(--muted);padding:20px 0">No songs found.</p>`;
 }
 let t; $("q").oninput = () => { clearTimeout(t); t = setTimeout(render, 80); };
@@ -154,13 +154,13 @@ function open(id, l) {
 }
 addEventListener("popstate", () => { if (!location.hash) document.body.classList.remove("reading"); else open(location.hash.slice(1)); });
 
-const lists = initLists({ kv, esc, songs: () => songs, open: (id) => open(id), setSemis: (n) => { semis = n; }, get canSend() { return !!hooks?.sendList; }, sendList: (l) => hooks?.sendList?.(l) });
+const lists = initLists({ kv, esc, songs: () => songs, find: (id) => idx?.byId.get(id)?.song, open: (id) => open(id), get canLead() { return !!hooks?.leadList; }, leadList: (l, i) => hooks?.leadList?.(l, i), setSemis: (n) => { semis = n; }, get canSend() { return !!hooks?.sendList; }, sendList: (l) => hooks?.sendList?.(l) });
 $("lists").onclick = () => lists.openLists();
 $("live").onclick = () => import("./live.js").then(m => m.openLive({ kv, esc, songs: () => songs, sectionColor, stripChords }));
 if (location.hash === "#live") setTimeout(() => songs.length && $("live").click(), 300);
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => { });
 // team songbook (media team testers only): add songs, photo → text, corrections → song inbox
 if (window.RW_TEAM) import("./team.js").then(m => { hooks = m.init({ kv, esc, $, songs: () => songs, setPending: (p) => { pending = p; if (idx) { rebuild(); render(); } }, open: (id) => open(id),
-    search: (q) => idx ? idx.search(q, { limit: 20 }) : [], sectionColor, stripChords, library: async () => (await kv.get("songs")) || null,
+    search: (q) => idx ? idx.search(q, { limit: 20 }) : [], find: (id) => idx?.byId.get(id)?.song, lists: () => lists, sectionColor, stripChords, library: async () => (await kv.get("songs")) || null,
     install: async (text, version) => { await kv.set("songs", { text, version }); show(text, version, true); }, refreshView: () => { if (cur) open(cur.song.id, cur.lang); } }); }).catch(e => console.error(e));
 boot();

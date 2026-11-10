@@ -17,7 +17,28 @@ export function init(app) {
   let queue = [];                                            // [{ id, kind, song, by, at, note, state: "queued" | "sent" }]
   // states: queued (not sent) → sent (waiting) → approved (desk said yes, comes with the next library update) → done (in this songbook)
   //         or merged (it was already in the songbook; that song was updated) / rejected
-  const save = async () => { await kv.set("team-queue", queue); app.setPending(queue.filter(q => q.kind === "new" && ["queued", "sent", "approved"].includes(q.state))); bar(); };
+  let teamWaiting = [];                                       // new songs other team members sent, still waiting at the laptop (so anyone can lead them)
+  const pendingNow = () => { const mine = queue.filter(q => q.kind === "new" && ["queued", "sent", "approved"].includes(q.state)); const ids = new Set(mine.map(q => q.song.id)); return [...mine, ...teamWaiting.filter(t => !ids.has(t.song.id))]; };
+  const save = async () => { await kv.set("team-queue", queue); app.setPending(pendingNow()); bar(); };
+  // read the song inbox (the team key can read it): new songs from the others show as "waiting · added by …"
+  async function loadTeamWaiting() {
+    if (!navigator.onLine || !(await kv.get("team-key"))) return;
+    try {
+      const key = await kv.get("team-key"), h = { authorization: "Bearer " + key, accept: "application/vnd.github+json" };
+      const r = await fetch(`${API()}/repos/${INBOX()}/contents/inbox`, { headers: h, cache: "no-store" }); if (!r.ok) return;
+      const files = (await r.json()).filter(f => f.type === "file" && f.name.endsWith(".json"));
+      const have = new Map(teamWaiting.map(t => [t.file, t])), out = [];
+      for (const f of files) {
+        if (queue.some(q => q.id + ".json" === f.name)) continue;                // my own
+        let t = have.get(f.name + f.sha);
+        if (!t) { try { const x = await (await fetch(`${API()}/repos/${INBOX()}/contents/${f.path}`, { headers: { ...h, accept: "application/vnd.github.raw" }, cache: "no-store" })).json(); if (x.kind !== "new" || !x.song?.versions) continue; t = { file: f.name + f.sha, song: x.song, by: x.by || "team", state: "team" }; } catch { continue; } }
+        out.push(t);
+      }
+      teamWaiting = out; await kv.set("team-waiting", teamWaiting); app.setPending(pendingNow());
+    } catch { }
+  }
+  kv.get("team-waiting").then(t => { teamWaiting = t || []; app.setPending(pendingNow()); loadTeamWaiting(); });
+  setInterval(() => { if (document.visibilityState === "visible") loadTeamWaiting(); }, 180000);
 
   // ---------- header buttons ----------
   const css = document.createElement("style");
@@ -38,15 +59,16 @@ export function init(app) {
     bar();
   }
   // Lead live: no laptop needed — tap verses, every phone's ● Live tab follows (the media desk wins while it is sending)
-  async function lead(song, lang) {
-    if (!pref("name", "")) return setup(() => lead(song, lang));
+  async function lead(song, lang, list, index) {
+    if (!pref("name", "")) return setup(() => lead(song, lang, list, index));
+    loadTeamWaiting();
     const { openLead } = await import("./lead.js");
-    openLead({ kv, esc, songs: app.songs, search: app.search, song, lang, stripChords: app.stripChords, sectionColor: app.sectionColor, by: pref("name", "") });
+    openLead({ kv, esc, songs: app.songs, find: app.find, lists: app.lists, search: app.search, song, lang, list, index, stripChords: app.stripChords, sectionColor: app.sectionColor, by: pref("name", "") });
   }
   function bar() { const n = queue.filter(q => q.state === "queued" || q.state === "sent").length; if ($("t-mine")) $("t-mine").textContent = n ? `Mine (${n})` : "Mine"; }
 
   kv.get("team-queue").then(q => { queue = q || []; if (app.songs().length) markDone(); save(); flush(); });
-  addEventListener("online", flush);
+  addEventListener("online", () => { flush(); loadTeamWaiting(); });
 
   // a sent song is "done" once the published library contains it (approved by the media desk)
   function markDone() {
@@ -86,7 +108,7 @@ export function init(app) {
       if (!name || !key) { box.querySelector("#t-st").textContent = "Enter your name and the team key."; return; }
       box.querySelector("#t-st").textContent = "Checking the key…";
       try { await gh("GET", `/repos/${INBOX()}`, null, key); } catch (e) { box.querySelector("#t-st").textContent = e.message; return; }
-      setPref("name", name); await kv.set("team-key", key); box.remove(); teambar(); then?.();
+      setPref("name", name); await kv.set("team-key", key); box.remove(); teambar(); loadTeamWaiting(); then?.();
     };
   }
   async function gh(method, url, body, key) {
@@ -236,6 +258,7 @@ export function init(app) {
       return true;
     },
     onLibrary: () => { markDone(); save(); },
+    leadList: (l, i) => lead(null, null, l, i || 0),
     tools: () => `<button class="ib" id="t-lv">📡 Lead live</button><button class="ib" id="t-fix">✎ Correct</button>`,
     bind: (song, lang) => { const b = $("t-fix"); if (b) b.onclick = () => editor({ song, lang }); const l = $("t-lv"); if (l) l.onclick = () => lead(song, lang); },
   };

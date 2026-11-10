@@ -30,7 +30,7 @@ export function initLists(app) {
   .pick{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--card);border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding:14px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -8px 30px rgba(0,0,0,.2)}
   .pick button.o{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);padding:12px 2px;font:inherit;font-size:15px}`;
   document.head.appendChild(css);
-  const song = (id) => app.songs().find(s => s.id === id);
+  const song = (id) => app.find?.(id) || app.songs().find(s => s.id === id);
   const num = (s) => s ? (s.books || []).map(b => b.book + " " + b.num).join(" · ") : "";
   const titleOf = (s) => s ? (s.versions[s.lang]?.title || s.title) : "(song not in this songbook)";
   const toast = (t) => { const d = document.createElement("div"); d.textContent = t; d.style.cssText = "position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#111827;color:#fff;padding:10px 16px;border-radius:12px;z-index:30;font-size:14px;max-width:90vw"; document.body.appendChild(d); setTimeout(() => d.remove(), 2600); };
@@ -56,7 +56,7 @@ export function initLists(app) {
       <div class="row" style="margin:6px 0 4px"><input id="ls-t" value="${esc(l.title)}" style="flex:1"><input id="ls-d" type="date" value="${esc(l.date)}" style="width:150px"></div>
       ${l.items.map((it, i) => { const s = song(it.songId); return `<div class="li"><span class="n">${i + 1}. ${esc(num(s))}</span><div class="t" data-i="${i}"><b>${esc(titleOf(s))}</b><span>${s?.key ? "song key " + esc(s.key) : "&nbsp;"}</span></div>
         <input class="k" data-k="${i}" value="${esc(it.key || "")}" placeholder="Key"><button class="sm" data-up="${i}" ${i ? "" : "disabled"}>↑</button><button class="sm" data-dn="${i}" ${i < l.items.length - 1 ? "" : "disabled"}>↓</button><button class="sm" data-rm="${i}">✕</button></div>`; }).join("") || `<p class="muted">Empty — open a song and tap “＋ List”.</p>`}
-      <div class="bar">${l.items.length ? `<button class="pbtn pri" id="ls-go">▶ Sing through</button>` : ""}<button class="pbtn" id="ls-share">Share as text</button>${app.canSend ? `<button class="pbtn" id="ls-send">Send to media desk${l.sent ? " again" : ""}</button>` : ""}</div>
+      <div class="bar">${l.items.length && app.canLead ? `<button class="pbtn pri" id="ls-lead" style="background:#e5484d;border-color:#e5484d">📡 Lead this list</button>` : ""}${l.items.length ? `<button class="pbtn ${app.canLead ? "" : "pri"}" id="ls-go">▶ Sing through</button>` : ""}<button class="pbtn" id="ls-share">Share as text</button>${app.canSend ? `<button class="pbtn" id="ls-send">Send to media desk${l.sent ? " again" : ""}</button>` : ""}</div>
       <div class="bar"><button class="pbtn" id="ls-del" style="color:#e5484d">Delete list</button></div>`);
     const q = (s) => box.querySelector(s);
     const touch = async () => { l.updated = new Date().toISOString(); await save(); };
@@ -69,6 +69,7 @@ export function initLists(app) {
     box.querySelectorAll("[data-rm]").forEach(e => e.onclick = async () => { l.items.splice(+e.dataset.rm, 1); await touch(); openList(id); });
     box.querySelectorAll(".t[data-i]").forEach(e => e.onclick = () => sing(l.id, +e.dataset.i));
     if (q("#ls-go")) q("#ls-go").onclick = () => sing(l.id, 0);
+    if (q("#ls-lead")) q("#ls-lead").onclick = () => { box.remove(); app.leadList(l, 0); };
     q("#ls-share").onclick = async () => {
       const text = `${l.title} — ${nice(l.date)}\n` + l.items.map((it, i) => { const s = song(it.songId); return `${i + 1}. ${num(s)} ${titleOf(s)}${it.key ? " (" + it.key + ")" : ""}`; }).join("\n");
       try { if (navigator.share) await navigator.share({ text }); else { await navigator.clipboard.writeText(text); toast("Copied — paste it in WhatsApp"); } } catch { }
@@ -102,6 +103,7 @@ export function initLists(app) {
 
   return {
     openLists,
+    all: async () => { await loaded; return lists; },
     tool: () => `<button class="ib" id="ls-add">＋ List</button>`,
     // list bar above the song when singing through a list
     nav(songId) {
