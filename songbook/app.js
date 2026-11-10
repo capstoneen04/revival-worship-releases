@@ -54,6 +54,8 @@ async function decrypt(buf, keyBytes) {
   return new TextDecoder().decode(b64(files["songs.json"]));
 }
 
+const cmpV = (a, b) => { const x = String(a || 0).split(".").map(Number), y = String(b || 0).split(".").map(Number); for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
+
 // ---------- app ----------
 let songs = [], pending = [], idx, cur = null, hooks = null, lang = pref("lang", ""), zoom = +pref("zoom", 1), chordsOn = pref("chords", "0") === "1", semis = 0;
 document.documentElement.style.setProperty("--zoom", zoom);
@@ -80,7 +82,7 @@ async function boot() {
 }
 async function refresh(have) {                       // new songs from the media team: unlock with the saved key
   try {
-    const { json } = await getJson("latest.json"); const v = json.library?.version; if (!v || v === have) return;
+    const { json } = await getJson("latest.json"); const v = json.library?.version; if (!v || cmpV(v, have) <= 0) return;   // never go back to an older (cached) library
     const key = await kv.get("key"); if (!key) return;
     const { buf, version } = await fetchPack();
     let text; try { text = await decrypt(buf, key); } catch { return newPassword(buf, version); }   // the church library password was changed
@@ -158,5 +160,7 @@ $("live").onclick = () => import("./live.js").then(m => m.openLive({ kv, esc, so
 if (location.hash === "#live") setTimeout(() => songs.length && $("live").click(), 300);
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => { });
 // team songbook (media team testers only): add songs, photo → text, corrections → song inbox
-if (window.RW_TEAM) import("./team.js").then(m => { hooks = m.init({ kv, esc, $, songs: () => songs, setPending: (p) => { pending = p; if (idx) { rebuild(); render(); } }, open: (id) => open(id), refreshView: () => { if (cur) open(cur.song.id, cur.lang); } }); }).catch(e => console.error(e));
+if (window.RW_TEAM) import("./team.js").then(m => { hooks = m.init({ kv, esc, $, songs: () => songs, setPending: (p) => { pending = p; if (idx) { rebuild(); render(); } }, open: (id) => open(id),
+    search: (q) => idx ? idx.search(q, { limit: 20 }) : [], sectionColor, stripChords, library: async () => (await kv.get("songs")) || null,
+    install: async (text, version) => { await kv.set("songs", { text, version }); show(text, version, true); }, refreshView: () => { if (cur) open(cur.song.id, cur.lang); } }); }).catch(e => console.error(e));
 boot();

@@ -1,7 +1,7 @@
 {
  "name": "Revival Songbook Team",
  "short_name": "Songbook Team",
- "description": "Media team: add and correct songs for the Revival songbook.",
+ "description": "Song and media team: add songs, lead live, approve.",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
