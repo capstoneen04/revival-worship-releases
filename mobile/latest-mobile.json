@@ -1,0 +1,9 @@
+{
+  "version": "0.4.0",
+  "versionCode": 8,
+  "file": "RevivalChurchLive-0.4.0.apk",
+  "sha256": "d7419b9daf1d3f96e68f7b9dc680e1687da8e5bd3d760cb93c8a2a8a4d0be1ef",
+  "size": 33118484,
+  "notes": "Updates itself from GitHub, Close app button, Clear for the next meeting.",
+  "cert": "c90d876e9525c095caef37e357766b71e1b7bcdafcc8a9dbdef70e8a6436df68"
+}
