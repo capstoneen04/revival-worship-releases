@@ -20,8 +20,9 @@ function firstLines(song) {
 
 // ---------- library clean-up (2.6): language tabs, archived songs, hidden Portuguese/Spanish numbers ----------
 // Tabs: English · Hindi · Hinglish (the Hindi songs in English letters + songs written in Hinglish) · Marathi.
-// Archived songs (merged copies, Portuguese/Spanish-only, not songs) are kept in the library but never listed or found;
-// an old id (a set list, a service) opens the song it was merged into.
+// 2.6.1: archived songs are gone from the library (Br. Enoch, 22 Nov 2026). An old id (a set list, a service) opens
+// the song it was merged into through the library's `moved` map {oldId: newId}. A song still flagged archived on a
+// computer that has not updated yet is simply never listed or found.
 export const TABS = [["en", "English"], ["hi", "हिंदी Hindi"], ["hl", "Hinglish"], ["mr", "मराठी Marathi"]];
 export const HIDDEN_BOOKS = new Set(["PT", "ES"]);
 export const ENGLISH_BOOKS = ["STL", "STLA", "TE", "OB"];
@@ -45,19 +46,19 @@ function tabSort(tab) {
   return (a, b) => sortKey(a).localeCompare(sortKey(b));
 }
 export class SongIndex {
-  constructor() { this.items = []; this.byId = new Map(); this.archived = []; }
-  build(songs) {
-    const all = songs.map(s => this._entry(s));
-    this.items = all.filter(e => !e.song.archived);
-    this.archived = all.filter(e => e.song.archived);
+  constructor() { this.items = []; this.byId = new Map(); this.moved = {}; }
+  build(songs, moved = {}) {
+    this.moved = moved || {};
+    const all = songs.filter(s => !s.archived).map(s => this._entry(s));
+    this.items = all;
     this.byId = new Map(all.map(e => [e.song.id, e]));
-    // merged copies open the song they were merged into (old set lists / services keep working)
-    for (const e of this.archived) { const t = this.resolve(e.song.id); if (t && t !== e) this.byId.set(e.song.id, t); }
+    // old ids (merged copies, removed 2.6.1) open the song they went into — old set lists / services keep working
+    for (const id of Object.keys(this.moved)) if (!this.byId.has(id)) { const t = this.resolve(id); if (t) this.byId.set(id, t); }
   }
   resolve(id) {
-    let e = this.byId.get(id), n = 0;
-    while (e && e.song.archived && e.song.mergedInto && n++ < 10) { const t = this.byId.get(e.song.mergedInto); if (!t || t === e) break; e = t; }
-    return e;
+    let n = 0;
+    while (!this.byId.has(id) && this.moved[id] && n++ < 10) id = this.moved[id];
+    return this.byId.get(id);
   }
   _entry(s) {
     const titles = [s.title, ...Object.values(s.versions || {}).map(v => v.title || "")].join(" | ");
@@ -77,17 +78,18 @@ export class SongIndex {
   }
   upsert(song) {
     const e = this._entry(song);
-    this.items = this.items.filter(x => x.song.id !== song.id); this.archived = this.archived.filter(x => x.song.id !== song.id);
-    (song.archived ? this.archived : this.items).push(e);
+    this.items = this.items.filter(x => x.song.id !== song.id);
+    if (song.archived) { this.byId.delete(song.id); return; }
+    this.items.push(e);
     this.byId.set(song.id, e);
   }
-  remove(id) { this.items = this.items.filter(x => x.song.id !== id); this.archived = this.archived.filter(x => x.song.id !== id); this.byId.delete(id); }
+  remove(id) { this.items = this.items.filter(x => x.song.id !== id); this.byId.delete(id); }
 
-  search(q, { lang = "", tab = "", book = "", status = "", category = "", tag = "", archived = false, limit = 200 } = {}) {
+  search(q, { lang = "", tab = "", book = "", status = "", category = "", tag = "", limit = 200 } = {}) {
     q = (q || "").trim();
-    let pool = archived ? this.archived : this.items;
+    let pool = this.items;
     // a tab narrows the list when browsing; a search looks through every language
-    if (tab && !q && !archived) { pool = pool.filter(e => inTab(e.song, tab)); if (!category && !tag && !lang && !book && !status) return pool.slice().sort((a, b) => tabSort(tab)(a.song, b.song)).slice(0, limit).map(e => ({ song: e.song, score: 0 })); }
+    if (tab && !q) { pool = pool.filter(e => inTab(e.song, tab)); if (!category && !tag && !lang && !book && !status) return pool.slice().sort((a, b) => tabSort(tab)(a.song, b.song)).slice(0, limit).map(e => ({ song: e.song, score: 0 })); }
     if (category) pool = pool.filter(e => (e.song.category || "") === category);
     if (tag) pool = pool.filter(e => (e.song.tags || []).includes(tag));
     if (lang) pool = pool.filter(e => e.song.versions && e.song.versions[lang]);

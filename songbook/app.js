@@ -57,7 +57,7 @@ async function decrypt(buf, keyBytes) {
 const cmpV = (a, b) => { const x = String(a || 0).split(".").map(Number), y = String(b || 0).split(".").map(Number); for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
 
 // ---------- app ----------
-let songs = [], pending = [], idx, cur = null, hooks = null, lang = pref("lang", ""), zoom = +pref("zoom", 1), chordsOn = pref("chords", "0") === "1", semis = 0;
+let songs = [], moved = {}, pending = [], idx, cur = null, hooks = null, lang = pref("lang", ""), zoom = +pref("zoom", 1), chordsOn = pref("chords", "0") === "1", semis = 0;
 document.documentElement.style.setProperty("--zoom", zoom);
 const th = pref("theme", ""); if (th) document.documentElement.dataset.theme = th;
 $("theme").onclick = () => { const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); const n = cur === "dark" ? "light" : "dark"; document.documentElement.dataset.theme = n; setPref("theme", n); };
@@ -99,7 +99,7 @@ function newPassword(buf, version) {
 }
 
 function show(text, version, updated) {
-  const data = JSON.parse(text); songs = (data.songs || data).filter(s => !data.deleted?.[s.id]);
+  const data = JSON.parse(text); songs = (data.songs || data).filter(s => !data.deleted?.[s.id] && !s.archived); moved = data.moved || {};
   rebuild();
   hooks?.onLibrary?.();
   $("app").hidden = false;
@@ -114,7 +114,7 @@ function show(text, version, updated) {
   render();
   if (location.hash && idx.byId.get(location.hash.slice(1))) open(location.hash.slice(1));
 }
-function rebuild() { idx = new SongIndex(); const have = new Set(songs.map(s => s.id)), ids = new Set(pending.map(p => p.song.id)); idx.build([...songs.filter(s => !ids.has(s.id)), ...pending.filter(p => !(p.state === "team" && have.has(p.song.id))).map(p => ({ ...p.song, _pending: p.state, _by: p.by }))]); }
+function rebuild() { idx = new SongIndex(); const have = new Set(songs.map(s => s.id)), ids = new Set(pending.map(p => p.song.id)); idx.build([...songs.filter(s => !ids.has(s.id)), ...pending.filter(p => !(p.state === "team" && have.has(p.song.id))).map(p => ({ ...p.song, _pending: p.state, _by: p.by }))], moved); }
 function render() {
   document.querySelectorAll("#chips button").forEach(b => b.classList.toggle("on", b.dataset.k === lang));
   const res = idx.search($("q").value, { tab: lang, limit: 150 });

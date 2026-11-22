@@ -1,18 +1,18 @@
 {
- "version": "2.6.1",
- "date": "2026-11-22T13:58:02.669Z",
+ "version": "2.6.2",
+ "date": "2026-11-22T14:31:38.350Z",
  "minShell": 2,
- "notes": "2.6.1: lower third animations (OBS page → Lower third style → Animation: Fade, Slide up, Wipe, From left, Cut); new lines only fade the text. Songs STL 41, 42 and 53 corrected (line order as printed, chorus marked, scrambled duplicate copies merged). The red Quote/Name chip hides again, long archived titles cut at two lines, sermon card shows 'P-25', session log notes which OBS sources the sound check listens to.",
+ "notes": "2.6.2: one copy of every song — the STLA/TE copies are merged into their STL songs, cut-off titles completed, OB songs carry their OB number and the OB book's key, and archived songs are removed from every app (old set lists still open the right song). Includes 2.6.1: lower third animations.",
  "update": {
-  "name": "update-2.6.1.zip",
-  "size": 3189750,
-  "sha256": "1c91ef6de42ef0c336e49a8e0e4b8b194c87f1ae2c28f31e101e699a42295dc3"
+  "name": "update-2.6.2.zip",
+  "size": 3189685,
+  "sha256": "14f72766c57e9d9f594fc4e688a2902d67135c0bf6da63584253e63b577c4b0f"
  },
  "library": {
-  "name": "church-library-26.1122.1928.rwpack",
-  "size": 3922721,
-  "sha256": "5671756eb017a0778770e8ce804795076fda4a92ce6c4523fd50069c863bb330",
-  "version": "26.1122.1928"
+  "name": "church-library-26.1122.2001.rwpack",
+  "size": 3464510,
+  "sha256": "a00e0497eb21842a7bfd7a4896e9a588486a0961e06574cce257fbbd14bfb3bf",
+  "version": "26.1122.2001"
  },
  "installers": {}
 }
