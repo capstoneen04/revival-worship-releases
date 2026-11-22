@@ -1,9 +1,9 @@
 {
-  "version": "0.4.1",
-  "versionCode": 9,
-  "file": "RevivalChurchLive-0.4.1.apk",
-  "sha256": "26d867c958c2922ec87c3756098029afd7e563a3f52356b829d41845e1b2662e",
+  "version": "0.5.0",
+  "versionCode": 10,
+  "file": "RevivalChurchLive-0.5.0.apk",
+  "sha256": "b2e5447e1dd78be7c16f5569fc64357f2f17a62b9a635444d0eef490f60a862e",
   "size": 33118484,
-  "notes": "Asks before Go Live (shows quality and stream key) and before End.",
+  "notes": "Song language tabs (English / हिंदी / Hinglish / मराठी); merged copies and Portuguese/Spanish songs hidden; English songs by number.",
   "cert": "c90d876e9525c095caef37e357766b71e1b7bcdafcc8a9dbdef70e8a6436df68"
 }
