@@ -1,18 +1,18 @@
 {
- "version": "2.5.1",
- "date": "2026-11-08T15:27:57.546Z",
+ "version": "2.6.0",
+ "date": "2026-11-22T10:14:28.854Z",
  "minShell": 2,
- "notes": "2.5.1: The Table Follow is immediate (updates while you scroll), click a paragraph to send it.",
+ "notes": "2.6.0: The Table reading band (two lines: what lies between them goes on screen; Lower third / Side panel / Projector sizes), Follow no longer jumps or sends half phrases, Clear goes back to the sermon card (no automatic Quote of the Day), sound check reads what OBS really sends, session log, song language tabs (English / हिंदी / Hinglish / मराठी) and archived songs hidden.",
  "update": {
-  "name": "update-2.5.1.zip",
-  "size": 3174683,
-  "sha256": "0ce1f4d67156345dd1f81f582911cde821f87d1e44f16e7e7b23865156ecbe1e"
+  "name": "update-2.6.0.zip",
+  "size": 3188051,
+  "sha256": "c5d0b77292c9289fc81238fc2183c6f7c47cfdb79d4afc92a12cc8887f9a4ec2"
  },
  "library": {
-  "name": "church-library-26.1122.1502.rwpack",
-  "size": 3849415,
-  "sha256": "07d9dba4ee02cfef92f45a9b5d82b56be37389358ed1915c565273ac7c9bb3ef",
-  "version": "26.1122.1502"
+  "name": "church-library-26.1122.1544.rwpack",
+  "size": 3849390,
+  "sha256": "fb8c7ad377fbb902902530a6c715232b51aa3fa9da9710b3279f9b8cbea502fe",
+  "version": "26.1122.1544"
  },
  "installers": {}
 }

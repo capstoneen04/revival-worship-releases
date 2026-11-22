@@ -70,7 +70,7 @@ export async function openLead({ kv, esc, songs, find, lists, search, song: firs
   function load(s, l) {
     song = s; lang = l && s.versions[l] ? l : (s.versions[s.lang] ? s.lang : Object.keys(s.versions)[0]); idx = -1;
     const v = s.versions[lang], langs = Object.keys(s.versions);
-    $("#ld-song").innerHTML = `<h1>${esc(v.title || s.title)}</h1><div class="meta">${(s.books || []).map(b => esc(b.book + " " + b.num)).join(" · ")}${s._pending ? " · not in the songbook yet" : ""}</div>
+    $("#ld-song").innerHTML = `<h1>${esc(v.title || s.title)}</h1><div class="meta">${(s.books || []).filter(b => b.book !== "PT" && b.book !== "ES").map(b => esc(b.book + " " + b.num)).join(" · ")}${s._pending ? " · not in the songbook yet" : ""}</div>
       ${langs.length > 1 ? `<div class="tabs">${langs.map(x => `<button data-lg="${x}" class="${x === lang ? "on" : ""}">${esc(({ hi: "हिंदी", "hi-Latn": "Hinglish", en: "English", mr: "मराठी", pt: "Português", es: "Español" })[x] || x)}</button>`).join("")}</div>` : ""}
       <button class="ld-sec ld-title" data-i="-2"><div class="lab">Title</div>${esc(v.title || s.title)}</button>
       ${v.sections.map((x, i) => `<button class="ld-sec" data-i="${i}" style="--sc:${sectionColor(x.label)}"><div class="lab">${esc(x.label)}</div>${x.lines.map(t => `<div>${esc(stripChords(t))}</div>`).join("")}</button>`).join("")}`;
@@ -110,7 +110,7 @@ export async function openLead({ kv, esc, songs, find, lists, search, song: firs
   function go(i) {
     const v = song.versions[lang];
     let p;
-    if (i === -2) p = { k: "text", t: v.title || song.title, x: [(song.books || []).map(b => b.book + " " + b.num).join(" · ")].filter(Boolean) };
+    if (i === -2) p = { k: "text", t: v.title || song.title, x: [(song.books || []).filter(b => b.book !== "PT" && b.book !== "ES").map(b => b.book + " " + b.num).join(" · ")].filter(Boolean) };
     else { if (i < 0 || i >= v.sections.length) return; const s = v.sections[i]; p = { k: "song", id: song.id, t: v.title || song.title, l: s.label || "", x: s.lines.map(stripChords).slice(0, 8) }; }
     idx = i;
     box.querySelectorAll(".ld-sec").forEach(b => b.classList.toggle("cur", +b.dataset.i === i));
@@ -128,7 +128,7 @@ export async function openLead({ kv, esc, songs, find, lists, search, song: firs
   let t; $("#ld-q").oninput = () => { clearTimeout(t); t = setTimeout(() => {
     const q = $("#ld-q").value.trim(); if (!q) { $("#ld-res").innerHTML = ""; return; }
     const res = search(q).slice(0, 6);
-    $("#ld-res").innerHTML = res.map(({ song: s }) => `<button class="song" data-id="${esc(s.id)}"><span class="n">${(s.books || [])[0] ? esc(s.books[0].book + " " + s.books[0].num) : ""}</span><div class="t">${esc(s.title)}</div></button>`).join("") || `<p class="muted">No songs found.</p>`;
+    $("#ld-res").innerHTML = res.map(({ song: s }) => `<button class="song" data-id="${esc(s.id)}"><span class="n">${(s.books || []).filter(b => b.book !== "PT" && b.book !== "ES")[0] ? esc(s.books[0].book + " " + s.books[0].num) : ""}</span><div class="t">${esc(s.title)}</div></button>`).join("") || `<p class="muted">No songs found.</p>`;
     $("#ld-res").querySelectorAll(".song").forEach(b => b.onclick = () => { const s = res.find(r => r.song.id === b.dataset.id)?.song; if (s) load(s); });
   }, 100); };
   if (firstList) setList(firstList, firstIndex || 0); else if (first) load(first, firstLang);

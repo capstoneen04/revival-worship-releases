@@ -1,7 +1,7 @@
 // Revival Songbook for phones (Android/iPhone, installable, works offline).
 // Songs come from the church library pack in the public update repo. The pack is encrypted; it is unlocked here,
 // on the phone, with the church library password. Nothing readable is ever published.
-import { SongIndex, LANG_NAMES } from "./search.js";
+import { SongIndex, LANG_NAMES, TABS, inTab, tabVersion, visibleBooks } from "./search.js";
 import { chordSegments, hasChords, stripChords, sectionColor, transposeKey } from "./chords.js";
 import { initLists } from "./lists.js";
 
@@ -103,11 +103,12 @@ function show(text, version, updated) {
   rebuild();
   hooks?.onLibrary?.();
   $("app").hidden = false;
-  $("count").textContent = `${songs.length.toLocaleString()} songs`;
+  $("count").textContent = `${idx.items.length.toLocaleString()} songs`;
   $("note").textContent = `Library ${version || ""}${updated ? " · just updated" : ""} · works offline`;
-  const langs = new Set(songs.flatMap(s => Object.keys(s.versions || {})));
+  // 2.6 language tabs: English · हिंदी · Hinglish · मराठी (a tab shows only when it has songs); search looks through all
+  if (!["", ...TABS.map(t => t[0])].includes(lang)) lang = "";                         // old setting ("hi-Latn", "pt"…)
   $("chips").innerHTML = "";
-  [["", "All"], ["hi", "हिंदी"], ["hi-Latn", "Hinglish"], ["en", "English"], ["mr", "मराठी"], ["pt", "Português"], ["es", "Español"]].filter(([k]) => !k || langs.has(k)).forEach(([k, v]) => {
+  [["", "All"], ["en", "English"], ["hi", "हिंदी"], ["hl", "Hinglish"], ["mr", "मराठी"]].filter(([k]) => !k || idx.items.some(e => inTab(e.song, k))).forEach(([k, v]) => {
     const b = document.createElement("button"); b.textContent = v; b.dataset.k = k; b.onclick = () => { lang = k; setPref("lang", k); render(); }; $("chips").appendChild(b);
   });
   render();
@@ -116,10 +117,10 @@ function show(text, version, updated) {
 function rebuild() { idx = new SongIndex(); const have = new Set(songs.map(s => s.id)), ids = new Set(pending.map(p => p.song.id)); idx.build([...songs.filter(s => !ids.has(s.id)), ...pending.filter(p => !(p.state === "team" && have.has(p.song.id))).map(p => ({ ...p.song, _pending: p.state, _by: p.by }))]); }
 function render() {
   document.querySelectorAll("#chips button").forEach(b => b.classList.toggle("on", b.dataset.k === lang));
-  const res = idx.search($("q").value, { lang, limit: 150 });
+  const res = idx.search($("q").value, { tab: lang, limit: 150 });
   $("list").innerHTML = res.map(({ song }) => {
-    const v = song.versions[lang] || song.versions[song.lang] || Object.values(song.versions)[0];
-    const b = (song.books || [])[0];
+    const v = tabVersion(song, lang);
+    const b = visibleBooks(song)[0];
     return `<button class="song" data-id="${esc(song.id)}"><span class="n">${b ? esc(b.book + " " + b.num) : ""}</span><div class="t">${esc(v.title || song.title)}${song._pending ? ` <span class="wait">${{ sent: "waiting for approval", approved: "approved — coming soon", queued: "not sent yet", team: "waiting · added by " + esc(song._by || "team") }[song._pending] || ""}</span>` : ""}</div><div class="s">${esc(stripChords(v.sections[0]?.lines[0] || ""))}</div></button>`;
   }).join("") || `<p style="color:var(--muted);padding:20px 0">No songs found.</p>`;
 }
@@ -131,14 +132,16 @@ function line(l) {
   return `<div class="cl">${chordSegments(l, semis).map(s => `<span class="cs"><b>${esc(s.chord)}</b>${esc(s.text) || " "}</span>`).join("")}</div>`;
 }
 function open(id, l) {
-  const song = idx.byId.get(id)?.song; if (!song) return;
+  const song = idx.byId.get(id)?.song; if (!song) return;                            // an archived (merged) id opens the song it went into
+  id = song.id;
   const langs = Object.keys(song.versions);
-  l = l || (lang && song.versions[lang] ? lang : song.lang in song.versions ? song.lang : langs[0]);
+  const want = lang === "hl" ? "hi-Latn" : lang;
+  l = l || (want && song.versions[want] ? want : song.lang in song.versions ? song.lang : langs[0]);
   const v = song.versions[l]; cur = { song, lang: l };
   const anyChords = v.sections.some(s => s.lines.some(hasChords));
   const key = song.key ? transposeKey(song.key, semis) : "";
   $("view").innerHTML = `<button class="back" id="back">‹ All songs</button>${lists.nav(id)}
-    <h1>${esc(v.title || song.title)}</h1><div class="meta">${(song.books || []).map(b => esc(b.book + " " + b.num)).join(" · ")}${key ? " · Key " + esc(key) : ""}${song.author ? " · " + esc(song.author) : ""}</div>
+    <h1>${esc(v.title || song.title)}</h1><div class="meta">${visibleBooks(song).map(b => esc(b.book + " " + b.num)).join(" · ")}${key ? " · Key " + esc(key) : ""}${song.author ? " · " + esc(song.author) : ""}</div>
     <div class="tools"><button class="ib" id="zm">A−</button><button class="ib" id="zp">A+</button>${lists.tool()}${hooks ? hooks.tools(song, l) : ""}${anyChords ? `<button class="ib" id="ch">${chordsOn ? "Hide chords" : "Chords"}</button>${chordsOn ? `<button class="ib" id="tm">−</button><button class="ib" id="tp">+</button>` : ""}` : ""}</div>
     ${langs.length > 1 ? `<div class="tabs">${langs.map(x => `<button data-l="${x}" class="${x === l ? "on" : ""}">${LANG_NAMES[x] || x}</button>`).join("")}</div>` : ""}
     ${v.sections.map(s => `<div class="sec" style="--sc:${sectionColor(s.label)}"><div class="lab">${esc(s.label)}</div>${s.lines.map(line).join("")}</div>`).join("")}`;

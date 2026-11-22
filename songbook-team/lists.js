@@ -31,7 +31,7 @@ export function initLists(app) {
   .pick button.o{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);padding:12px 2px;font:inherit;font-size:15px}`;
   document.head.appendChild(css);
   const song = (id) => app.find?.(id) || app.songs().find(s => s.id === id);
-  const num = (s) => s ? (s.books || []).map(b => b.book + " " + b.num).join(" · ") : "";
+  const num = (s) => s ? (s.books || []).filter(b => b.book !== "PT" && b.book !== "ES").map(b => b.book + " " + b.num).join(" · ") : "";
   const titleOf = (s) => s ? (s.versions[s.lang]?.title || s.title) : "(song not in this songbook)";
   const toast = (t) => { const d = document.createElement("div"); d.textContent = t; d.style.cssText = "position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#111827;color:#fff;padding:10px 16px;border-radius:12px;z-index:30;font-size:14px;max-width:90vw"; document.body.appendChild(d); setTimeout(() => d.remove(), 2600); };
   function screen(html) { document.querySelectorAll(".ls").forEach(x => x.remove()); const d = document.createElement("div"); d.className = "ls"; d.innerHTML = `<div class="in">${html}</div>`; document.body.appendChild(d); return d; }

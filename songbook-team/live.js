@@ -59,7 +59,7 @@ export async function openLive({ kv, esc, songs, sectionColor, stripChords }) {
     if (p.k === "song" && byId.get(p.id)) {
       const song = byId.get(p.id); const v = song.versions[song.lang] || Object.values(song.versions)[0];
       if (shownSong !== p.id) {
-        $b.innerHTML = `<h1>${esc(v.title || song.title)}</h1><div class="meta">${(song.books || []).map(b => esc(b.book + " " + b.num)).join(" · ")}</div>` +
+        $b.innerHTML = `<h1>${esc(v.title || song.title)}</h1><div class="meta">${(song.books || []).filter(b => b.book !== "PT" && b.book !== "ES").map(b => esc(b.book + " " + b.num)).join(" · ")}</div>` +
           v.sections.map((s, i) => `<div class="lv-sec" data-l="${esc(base(s.label))}" style="--sc:${sectionColor(s.label)}"><div class="lab">${esc(s.label)}</div>${s.lines.map(l => `<div>${esc(stripChords(l))}</div>`).join("")}</div>`).join("");
         shownSong = p.id;
       }
